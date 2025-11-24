@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventor Part Scanner</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: radial-gradient(circle at top, #151b3c 0, #050509 45%, #020207 100%);
+      color: #f5f5f5;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0.03) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      mix-blend-mode: soft-light;
+      opacity: 0.35;
+      z-index: 0;
+    }
+
+    #top-bar {
+      position: fixed;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      background: linear-gradient(135deg, rgba(16, 22, 54, 0.92), rgba(19, 43, 88, 0.9));
+      border-radius: 999px;
+      padding: 10px 18px;
+      border: 1px solid rgba(120, 220, 255, 0.35);
+      box-shadow:
+        0 0 12px rgba(0, 255, 204, 0.25),
+        0 0 40px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      font-size: 12px;
+    }
+
+    #brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "Orbitron", system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9ae6ff;
+      padding-right: 12px;
+      border-right: 1px solid rgba(144, 205, 244, 0.35);
+    }
+
+    #brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #32ffb5 0, #0a8370 65%);
+      box-shadow: 0 0 12px #32ffb5;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    #fileInput {
+      font-size: 11px;
+      color: #dbeafe;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 255, 0.6);
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.25), rgba(15,23,42,0.9));
+      cursor: pointer;
+    }
+
+    #fileInput::-webkit-file-upload-button,
+    #fileInput::file-selector-button {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: none;
+      margin-right: 6px;
+      background: linear-gradient(135deg, #38bdf8, #22c55e);
+      color: #020617;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #info {
+      margin-left: 8px;
+      color: #7df9ff;
+      white-space: nowrap;
+      max-width: 40vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 11px;
+      opacity: 0.95;
+    }
+
+    #tree-panel {
+      position: fixed;
+      left: 18px;
+      top: 80px;
+      bottom: 80px;
+      width: 320px;
+      background: linear-gradient(135deg, rgba(16, 22, 54, 0.93), rgba(19, 43, 88, 0.91));
+      border-radius: 14px;
+      border: 1px solid rgba(120, 220, 255, 0.35);
+      box-shadow:
+        0 0 12px rgba(0, 255, 204, 0.25),
+        0 0 40px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      z-index: 9;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #tree-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(120, 220, 255, 0.25);
+      font-family: "Orbitron", system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9ae6ff;
+    }
+
+    #tree-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    #tree-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #tree-content::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 3px;
+    }
+
+    #tree-content::-webkit-scrollbar-thumb {
+      background: rgba(120, 220, 255, 0.4);
+      border-radius: 3px;
+    }
+
+    #tree-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(120, 220, 255, 0.6);
+    }
+
+    .tree-item {
+      padding: 8px 10px;
+      margin: 2px 0;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+    }
+
+    .tree-item:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .tree-item.selected {
+      background: radial-gradient(circle at top left, rgba(34,197,94,0.25), rgba(15,23,42,0.7));
+      border-color: rgba(45,212,191,0.6);
+      color: #bbf7d0;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+    }
+
+    .tree-item-name {
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .tree-item.selected .tree-item-name {
+      color: #bbf7d0;
+    }
+
+    #part-display {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9;
+      min-width: 320px;
+      max-width: 70vw;
+      padding: 14px 20px;
+      border-radius: 14px;
+      background: radial-gradient(circle at top left, rgba(34,197,94,0.20), rgba(15,23,42,0.96));
+      border: 1px solid rgba(45,212,191,0.55);
+      box-shadow:
+        0 0 18px rgba(16, 185, 129, 0.4),
+        0 0 40px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #part-label {
+      font-family: "Orbitron", system-ui, sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #a5f3fc;
+      opacity: 0.9;
+    }
+
+    #part-value {
+      font-family: "Orbitron", system-ui, sans-serif;
+      font-size: 18px;
+      color: #bbf7d0;
+      text-shadow:
+        0 0 6px rgba(34,197,94,0.9),
+        0 0 16px rgba(22,163,74,0.9);
+      font-weight: 600;
+    }
+
+    #part-description {
+      font-size: 13px;
+      color: #d1fae5;
+      opacity: 0.85;
+      font-style: italic;
+    }
+
+    #hint {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      font-size: 11px;
+      opacity: 0.65;
+      color: #e5e7eb;
+      z-index: 8;
+      text-align: right;
+      pointer-events: none;
+    }
+
+    #hint span {
+      color: #38bdf8;
+    }
+
+    canvas {
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 1024px) {
+      #tree-panel {
+        width: 280px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      #tree-panel {
+        left: 8px;
+        top: 70px;
+        bottom: 120px;
+        width: 240px;
+      }
+      #top-bar {
+        max-width: 92vw;
+        padding-inline: 12px;
+      }
+      #info {
+        display: none;
+      }
+      #part-display {
+        bottom: 20px;
+        max-width: 88vw;
+        min-width: 260px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="top-bar">
+    <div id="brand">
+      <div id="brand-dot"></div>
+      <span>PART&nbsp;SCAN</span>
+    </div>
+    <label>
+      <input type="file" id="fileInput" accept=".glb,.gltf" />
+    </label>
+    <span id="info">Loading viewer...</span>
+  </div>
+
+  <div id="tree-panel">
+    <div id="tree-header">Assembly Tree</div>
+    <div id="tree-content">
+      <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px;">
+        Load a model to view parts
+      </div>
+    </div>
+  </div>
+
+  <div id="part-display">
+    <div id="part-label">SELECTED PART</div>
+    <div id="part-value">—</div>
+    <div id="part-description">Click on a part to view details</div>
+  </div>
+
+  <div id="hint">
+    <div>Rotate: drag • Zoom: wheel</div>
+    <div>Pick part: <span>click on model or tree</span></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    const info = document.getElementById('info');
+    const fileInput = document.getElementById('fileInput');
+    const partValue = document.getElementById('part-value');
+    const partDescription = document.getElementById('part-description');
+    const treeContent = document.getElementById('tree-content');
+
+    let scene, camera, renderer, controls;
+    let raycaster, mouse;
+    let modelRoot = null;
+    let selectedObject = null;
+    let originalMaterials = new Map();
+    let partsList = [];
+
+    function checkThree() {
+      if (typeof THREE === 'undefined') {
+        info.textContent = 'Loading Three.js...';
+        setTimeout(checkThree, 100);
+        return;
+      }
+      loadOrbitControls();
+    }
+
+    function loadOrbitControls() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+      script.onload = loadGLTFLoader;
+      script.onerror = () => {
+        info.textContent = 'Failed to load OrbitControls';
+      };
+      document.head.appendChild(script);
+    }
+
+    function loadGLTFLoader() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+      script.onload = init;
+      script.onerror = () => {
+        info.textContent = 'Failed to load GLTFLoader';
+      };
+      document.head.appendChild(script);
+    }
+
+    function init() {
+      info.textContent = 'Viewer ready – choose a GLB file';
+
+      scene = new THREE.Scene();
+      scene.background = null;
+
+      camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        2000
+      );
+      camera.position.set(0, 2, 5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.rotateSpeed = 0.7;
+      controls.zoomSpeed = 0.9;
+
+      const hemi = new THREE.HemisphereLight(0xbfefff, 0x1f2937, 1.0);
+      hemi.position.set(0, 50, 0);
+      scene.add(hemi);
+
+      const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+      dir1.position.set(25, 30, 18);
+      scene.add(dir1);
+
+      const dir2 = new THREE.DirectionalLight(0x38bdf8, 0.5);
+      dir2.position.set(-20, -10, -15);
+      scene.add(dir2);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      window.addEventListener('resize', onWindowResize, false);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
+      fileInput.addEventListener('change', onFileSelected, false);
+
+      animate();
+    }
+
+    function onWindowResize() {
+      if (!camera || !renderer) return;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function buildPartsTree() {
+      partsList = [];
+      treeContent.innerHTML = '';
+
+      if (!modelRoot) return;
+
+      modelRoot.traverse((obj) => {
+        if (obj.isMesh) {
+          const partInfo = getPartInfo(obj);
+          if (partInfo.name && !partInfo.name.includes('Scene')) {
+            partsList.push({ object: obj, info: partInfo });
+          }
+        }
+      });
+
+      // Remove duplicates by name
+      const uniqueParts = [];
+      const seenNames = new Set();
+      partsList.forEach(part => {
+        if (!seenNames.has(part.info.name)) {
+          seenNames.add(part.info.name);
+          uniqueParts.push(part);
+        }
+      });
+
+      uniqueParts.sort((a, b) => a.info.name.localeCompare(b.info.name));
+
+      uniqueParts.forEach(part => {
+        const item = document.createElement('div');
+        item.className = 'tree-item';
+        item.innerHTML = `<div class="tree-item-name">${part.info.name}</div>`;
+        if (part.info.description) {
+          item.innerHTML += `<div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${part.info.description}</div>`;
+        }
+        item.addEventListener('click', () => selectPartFromTree(part));
+        treeContent.appendChild(item);
+      });
+    }
+
+    function getPartInfo(obj) {
+      let current = obj;
+      let partName = null;
+      let description = null;
+
+      // Find parent with meaningful name
+      while (current) {
+        if (current.parent && current.parent.name && 
+            !current.parent.name.toLowerCase().includes('solid') &&
+            !current.parent.name.toLowerCase().includes('mesh') &&
+            !current.parent.name.toLowerCase().includes('scene') &&
+            current.parent.name !== '') {
+          partName = current.parent.name;
+          
+          // Check for description in userData
+          if (current.parent.userData && current.parent.userData.description) {
+            description = current.parent.userData.description;
+          }
+          break;
+        }
+        current = current.parent;
+      }
+
+      if (!partName) {
+        current = obj;
+        while (current) {
+          if (current.name && 
+              !current.name.toLowerCase().includes('solid') &&
+              !current.name.toLowerCase().includes('mesh') &&
+              !current.name.toLowerCase().includes('scene') &&
+              current.name !== '') {
+            partName = current.name;
+            if (current.userData && current.userData.description) {
+              description = current.userData.description;
+            }
+            break;
+          }
+          current = current.parent;
+        }
+      }
+
+      // Try to extract description from name if it contains a dash or colon
+      if (!description && partName) {
+        const match = partName.match(/[-:]\s*(.+)$/);
+        if (match) {
+          description = match[1].trim();
+        }
+      }
+
+      return {
+        name: partName || 'Unknown Part',
+        description: description || 'No description available'
+      };
+    }
+
+    function selectPartFromTree(part) {
+      highlightObject(part.object);
+      partValue.textContent = part.info.name;
+      partDescription.textContent = part.info.description;
+      
+      // Update tree selection
+      document.querySelectorAll('.tree-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      event.currentTarget.classList.add('selected');
+
+      // Focus camera on part
+      focusOnObject(part.object);
+    }
+
+    function focusOnObject(obj) {
+      const box = new THREE.Box3().setFromObject(obj);
+      const center = box.getCenter(new THREE.Vector3());
+      
+      controls.target.copy(center);
+      controls.update();
+    }
+
+    function onFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      info.textContent = 'Loading model...';
+      partValue.textContent = '—';
+      partDescription.textContent = 'Loading...';
+      clearSelection();
+
+      const url = URL.createObjectURL(file);
+      const loader = new THREE.GLTFLoader();
+
+      loader.load(
+        url,
+        (gltf) => {
+          if (modelRoot) {
+            scene.remove(modelRoot);
+          }
+          modelRoot = gltf.scene;
+          scene.add(modelRoot);
+
+          originalMaterials.clear();
+          modelRoot.traverse((child) => {
+            if (child.isMesh && child.material) {
+              originalMaterials.set(child, child.material.clone());
+            }
+          });
+
+          const box = new THREE.Box3().setFromObject(modelRoot);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+
+          modelRoot.position.sub(center);
+
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const fov = camera.fov * (Math.PI / 180);
+          let cameraZ = maxDim / (2 * Math.tan(fov / 2));
+          cameraZ *= 1.6;
+
+          camera.position.set(0, maxDim * 0.35, cameraZ);
+          camera.lookAt(0, 0, 0);
+          controls.target.set(0, 0, 0);
+          controls.update();
+
+          buildPartsTree();
+
+          info.textContent = 'Model loaded. Click a part to scan its details.';
+          partDescription.textContent = 'Click on a part to view details';
+          URL.revokeObjectURL(url);
+        },
+        (xhr) => {
+          if (xhr.lengthComputable) {
+            const percent = (xhr.loaded / xhr.total) * 100;
+            info.textContent = 'Loading model... ' + percent.toFixed(1) + '%';
+          }
+        },
+        (error) => {
+          console.error(error);
+          info.textContent = 'Error loading model';
+          URL.revokeObjectURL(url);
+        }
+      );
+    }
+
+    function clearSelection() {
+      if (selectedObject) {
+        if (originalMaterials.has(selectedObject)) {
+          selectedObject.material = originalMaterials.get(selectedObject).clone();
+        }
+        selectedObject = null;
+      }
+      document.querySelectorAll('.tree-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+    }
+
+    function highlightObject(obj) {
+      clearSelection();
+      
+      if (obj && obj.isMesh && obj.material) {
+        selectedObject = obj;
+        const highlightMat = obj.material.clone();
+        
+        if (highlightMat.emissive) {
+          highlightMat.emissive.setHex(0x00ffcc);
+          highlightMat.emissiveIntensity = 0.5;
+        } else {
+          highlightMat.emissive = new THREE.Color(0x00ffcc);
+          highlightMat.emissiveIntensity = 0.5;
+        }
+        
+        obj.material = highlightMat;
+      }
+    }
+
+    function onPointerDown(event) {
+      if (!modelRoot) return;
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        let obj = intersects[0].object;
+        highlightObject(obj);
+        
+        const partInfo = getPartInfo(obj);
+        partValue.textContent = partInfo.name;
+        partDescription.textContent = partInfo.description;
+
+        // Highlight in tree
+        const items = document.querySelectorAll('.tree-item');
+        items.forEach(item => {
+          if (item.querySelector('.tree-item-name').textContent === partInfo.name) {
+            item.classList.add('selected');
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          } else {
+            item.classList.remove('selected');
+          }
+        });
+      } else {
+        clearSelection();
+        partValue.textContent = '—';
+        partDescription.textContent = 'Click on a part to view details';
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (controls && renderer && camera && scene) {
+        controls.update();
+        renderer.render(scene, camera);
+      }
+    }
+
+    checkThree();
+  </script>
+</body>
+</html>
