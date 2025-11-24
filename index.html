@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventor Part Number Viewer</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #111;
+      color: #eee;
+    }
+    #top-bar {
+      position: fixed;
+      left: 10px;
+      top: 10px;
+      z-index: 10;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: rgba(0,0,0,0.75);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+    #info {
+      margin-left: 8px;
+      color: #0f0;
+      white-space: nowrap;
+      max-width: 60vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    input[type="file"] {
+      font-size: 12px;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="top-bar">
+    <label>
+      Load GLB:
+      <input type="file" id="fileInput" accept=".glb,.gltf" />
+    </label>
+    <span id="info">No model loaded</span>
+  </div>
+
+  <!-- three.js + extras from CDN -->
+  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.161.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/three@0.161.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <script>
+    let scene, camera, renderer, controls;
+    let raycaster, mouse;
+    let modelRoot = null;
+
+    const info = document.getElementById('info');
+    const fileInput = document.getElementById('fileInput');
+
+    init();
+    animate();
+
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x202020);
+
+      camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        2000
+      );
+      camera.position.set(0, 2, 5);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+
+      // Lights
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+      hemi.position.set(0, 20, 0);
+      scene.add(hemi);
+
+      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+      dir.position.set(10, 10, 10);
+      scene.add(dir);
+
+      raycaster = new THREE.Raycaster();
+      mouse = new THREE.Vector2();
+
+      window.addEventListener('resize', onWindowResize, false);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
+
+      fileInput.addEventListener('change', onFileSelected, false);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      info.textContent = 'Loading model...';
+
+      const url = URL.createObjectURL(file);
+      const loader = new THREE.GLTFLoader();
+
+      loader.load(
+        url,
+        (gltf) => {
+          // Remove previous model if any
+          if (modelRoot) {
+            scene.remove(modelRoot);
+          }
+          modelRoot = gltf.scene;
+          scene.add(modelRoot);
+
+          // Center and frame the model
+          const box = new THREE.Box3().setFromObject(modelRoot);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+
+          modelRoot.position.sub(center);
+
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const fov = camera.fov * (Math.PI / 180);
+          let cameraZ = maxDim / (2 * Math.tan(fov / 2));
+          cameraZ *= 1.5;
+
+          camera.position.set(0, maxDim * 0.3, cameraZ);
+          camera.lookAt(0, 0, 0);
+          controls.target.set(0, 0, 0);
+          controls.update();
+
+          info.textContent = 'Model loaded. Click a part to see its name/part number.';
+          URL.revokeObjectURL(url);
+        },
+        undefined,
+        (error) => {
+          console.error(error);
+          info.textContent = 'Error loading model.';
+          URL.revokeObjectURL(url);
+        }
+      );
+    }
+
+    function onPointerDown(event) {
+      if (!modelRoot) return;
+
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length > 0) {
+        let obj = intersects[0].object;
+
+        // climb up until we find a named parent if needed
+        let target = obj;
+        while (target && !target.name) {
+          target = target.parent;
+        }
+
+        const partName =
+          (target && target.name) || obj.name || '(no name on this mesh)';
+
+        info.textContent = 'Part: ' + partName;
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
