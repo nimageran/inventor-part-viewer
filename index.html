@@ -2,53 +2,239 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Inventor Part Number Viewer</title>
+  <title>Inventor Part Scanner</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
       height: 100%;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #111;
-      color: #eee;
+      background: radial-gradient(circle at top, #151b3c 0, #050509 45%, #020207 100%);
+      color: #f5f5f5;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+
+    /* subtle scan-lines overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,0.03),
+        rgba(255,255,255,0.03) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      mix-blend-mode: soft-light;
+      opacity: 0.35;
+      z-index: 0;
+    }
+
     #top-bar {
       position: fixed;
-      left: 10px;
-      top: 10px;
+      left: 50%;
+      top: 18px;
+      transform: translateX(-50%);
       z-index: 10;
       display: flex;
-      gap: 10px;
+      gap: 14px;
       align-items: center;
-      background: rgba(0,0,0,0.75);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 13px;
+      background: linear-gradient(135deg, rgba(16, 22, 54, 0.92), rgba(19, 43, 88, 0.9));
+      border-radius: 999px;
+      padding: 10px 18px;
+      border: 1px solid rgba(120, 220, 255, 0.35);
+      box-shadow:
+        0 0 12px rgba(0, 255, 204, 0.25),
+        0 0 40px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      font-size: 12px;
     }
+
+    #brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: "Orbitron", system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9ae6ff;
+      padding-right: 12px;
+      border-right: 1px solid rgba(144, 205, 244, 0.35);
+    }
+
+    #brand-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: radial-gradient(circle, #32ffb5 0, #0a8370 65%);
+      box-shadow: 0 0 12px #32ffb5;
+    }
+
+    #fileInput {
+      font-size: 11px;
+      color: #dbeafe;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 255, 0.6);
+      background: radial-gradient(circle at top left, rgba(59,130,246,0.25), rgba(15,23,42,0.9));
+      cursor: pointer;
+    }
+
+    #fileInput::-webkit-file-upload-button {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: none;
+      margin-right: 6px;
+      background: linear-gradient(135deg, #38bdf8, #22c55e);
+      color: #020617;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #fileInput::file-selector-button {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: none;
+      margin-right: 6px;
+      background: linear-gradient(135deg, #38bdf8, #22c55e);
+      color: #020617;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #fileInput::-webkit-file-upload-button:hover,
+    #fileInput::file-selector-button:hover {
+      filter: brightness(1.1);
+    }
+
+    #fileInput::-webkit-file-upload-button:active,
+    #fileInput::file-selector-button:active {
+      filter: brightness(0.95);
+    }
+
     #info {
       margin-left: 8px;
-      color: #0f0;
+      color: #7df9ff;
       white-space: nowrap;
-      max-width: 60vw;
+      max-width: 40vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 11px;
+      opacity: 0.95;
+    }
+
+    #part-display {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9;
+      min-width: 260px;
+      max-width: 70vw;
+      padding: 10px 18px;
+      border-radius: 14px;
+      background: radial-gradient(circle at top left, rgba(34,197,94,0.20), rgba(15,23,42,0.96));
+      border: 1px solid rgba(45,212,191,0.55);
+      box-shadow:
+        0 0 18px rgba(16, 185, 129, 0.4),
+        0 0 40px rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    #part-label {
+      font-family: "Orbitron", system-ui, sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #a5f3fc;
+      opacity: 0.9;
+    }
+
+    #part-value {
+      font-family: "Orbitron", system-ui, sans-serif;
+      font-size: 16px;
+      color: #bbf7d0;
+      text-shadow:
+        0 0 6px rgba(34,197,94,0.9),
+        0 0 16px rgba(22,163,74,0.9);
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    input[type="file"] {
-      font-size: 12px;
+
+    #hint {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      font-size: 11px;
+      opacity: 0.65;
+      color: #e5e7eb;
+      z-index: 8;
+      text-align: right;
+      pointer-events: none;
     }
+
+    #hint span {
+      color: #38bdf8;
+    }
+
     canvas {
       display: block;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+      #top-bar {
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 92vw;
+        padding-inline: 12px;
+      }
+      #info {
+        display: none;
+      }
+      #part-display {
+        bottom: 20px;
+        max-width: 88vw;
+      }
     }
   </style>
 </head>
 <body>
   <div id="top-bar">
+    <div id="brand">
+      <div id="brand-dot"></div>
+      <span>PART&nbsp;SCAN</span>
+    </div>
     <label>
-      Load GLB:
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
     <span id="info">Initializing viewer...</span>
+  </div>
+
+  <div id="part-display">
+    <div id="part-label">ACTIVE PART</div>
+    <div id="part-value">—</div>
+  </div>
+
+  <div id="hint">
+    <div>Rotate: drag • Zoom: wheel</div>
+    <div>Pick part: <span>click on model</span></div>
   </div>
 
   <!-- three.js + extras from CDN -->
@@ -63,11 +249,9 @@
 
     const info = document.getElementById('info');
     const fileInput = document.getElementById('fileInput');
-
-    console.log('Viewer script starting');
+    const partValue = document.getElementById('part-value');
 
     document.addEventListener('DOMContentLoaded', () => {
-      // If THREE didn't load, this will fail and you'll see error in console
       if (!window.THREE) {
         info.textContent = 'Error: THREE.js not loaded (check internet / CDN)';
         console.error('THREE.js not loaded');
@@ -82,7 +266,7 @@
       info.textContent = 'Viewer ready – choose a GLB file';
 
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x202020);
+      scene.background = null; // let the gradient show
 
       camera = new THREE.PerspectiveCamera(
         60,
@@ -93,20 +277,27 @@
       camera.position.set(0, 2, 5);
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.rotateSpeed = 0.7;
+      controls.zoomSpeed = 0.9;
 
-      // Lights
-      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
-      hemi.position.set(0, 20, 0);
+      const hemi = new THREE.HemisphereLight(0xbfefff, 0x1f2937, 1.0);
+      hemi.position.set(0, 50, 0);
       scene.add(hemi);
 
-      const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-      dir.position.set(10, 10, 10);
-      scene.add(dir);
+      const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+      dir1.position.set(25, 30, 18);
+      scene.add(dir1);
+
+      const dir2 = new THREE.DirectionalLight(0x38bdf8, 0.5);
+      dir2.position.set(-20, -10, -15);
+      scene.add(dir2);
 
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
@@ -129,6 +320,7 @@
       if (!file) return;
 
       info.textContent = 'Loading model...';
+      partValue.textContent = '—';
 
       const url = URL.createObjectURL(file);
       const loader = new THREE.GLTFLoader();
@@ -151,17 +343,24 @@
           const maxDim = Math.max(size.x, size.y, size.z);
           const fov = camera.fov * (Math.PI / 180);
           let cameraZ = maxDim / (2 * Math.tan(fov / 2));
-          cameraZ *= 1.5;
+          cameraZ *= 1.6;
 
-          camera.position.set(0, maxDim * 0.3, cameraZ);
+          camera.position.set(0, maxDim * 0.35, cameraZ);
           camera.lookAt(0, 0, 0);
           controls.target.set(0, 0, 0);
           controls.update();
 
-          info.textContent = 'Model loaded. Click a part to see its name/part number.';
+          info.textContent = 'Model loaded. Click a part to scan its name/part number.';
           URL.revokeObjectURL(url);
         },
-        undefined,
+        (xhr) => {
+          if (xhr.lengthComputable) {
+            const percent = (xhr.loaded / xhr.total) * 100;
+            info.textContent = 'Loading model... ' + percent.toFixed(1) + '%';
+          } else {
+            info.textContent = 'Loading model...';
+          }
+        },
         (error) => {
           console.error(error);
           info.textContent = 'Error loading model (see browser console).';
@@ -182,7 +381,6 @@
 
       if (intersects.length > 0) {
         let obj = intersects[0].object;
-
         let target = obj;
         while (target && !target.name) {
           target = target.parent;
@@ -191,7 +389,7 @@
         const partName =
           (target && target.name) || obj.name || '(no name on this mesh)';
 
-        info.textContent = 'Part: ' + partName;
+        partValue.textContent = partName;
       }
     }
 
