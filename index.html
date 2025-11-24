@@ -237,28 +237,48 @@
     <div>Pick part: <span>click on model</span></div>
   </div>
 
-  <!-- Three.js from CDN -->
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
-      }
-    }
-  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  <script>
+    const info = document.getElementById('info');
+    const fileInput = document.getElementById('fileInput');
+    const partValue = document.getElementById('part-value');
 
     let scene, camera, renderer, controls;
     let raycaster, mouse;
     let modelRoot = null;
 
-    const info = document.getElementById('info');
-    const fileInput = document.getElementById('fileInput');
-    const partValue = document.getElementById('part-value');
+    // Wait for THREE to load
+    function checkThree() {
+      if (typeof THREE === 'undefined') {
+        info.textContent = 'Loading Three.js...';
+        setTimeout(checkThree, 100);
+        return;
+      }
+      loadOrbitControls();
+    }
+
+    // Load OrbitControls
+    function loadOrbitControls() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+      script.onload = loadGLTFLoader;
+      script.onerror = () => {
+        info.textContent = 'Failed to load OrbitControls';
+      };
+      document.head.appendChild(script);
+    }
+
+    // Load GLTFLoader
+    function loadGLTFLoader() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+      script.onload = init;
+      script.onerror = () => {
+        info.textContent = 'Failed to load GLTFLoader';
+      };
+      document.head.appendChild(script);
+    }
 
     function init() {
       info.textContent = 'Viewer ready – choose a GLB file';
@@ -279,7 +299,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      controls = new OrbitControls(camera, renderer.domElement);
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
       controls.rotateSpeed = 0.7;
@@ -302,8 +322,9 @@
 
       window.addEventListener('resize', onWindowResize, false);
       renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
-
       fileInput.addEventListener('change', onFileSelected, false);
+
+      animate();
     }
 
     function onWindowResize() {
@@ -321,7 +342,7 @@
       partValue.textContent = '—';
 
       const url = URL.createObjectURL(file);
-      const loader = new GLTFLoader();
+      const loader = new THREE.GLTFLoader();
 
       loader.load(
         url,
@@ -399,9 +420,8 @@
       }
     }
 
-    // Start the application
-    init();
-    animate();
+    // Start loading
+    checkThree();
   </script>
 </body>
 </html>
