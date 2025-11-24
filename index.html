@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inventor Part Scanner</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
@@ -16,7 +17,6 @@
       font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* subtle scan-lines overlay */
     body::before {
       content: "";
       position: fixed;
@@ -224,7 +224,7 @@
     <label>
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
-    <span id="info">Initializing viewer...</span>
+    <span id="info">Loading viewer...</span>
   </div>
 
   <div id="part-display">
@@ -237,12 +237,21 @@
     <div>Pick part: <span>click on model</span></div>
   </div>
 
-  <!-- three.js + extras from CDN -->
-  <script src="https://unpkg.com/three@0.161.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/three@0.161.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://unpkg.com/three@0.161.0/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- Three.js from CDN -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+      }
+    }
+  </script>
 
-  <script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
     let scene, camera, renderer, controls;
     let raycaster, mouse;
     let modelRoot = null;
@@ -251,22 +260,11 @@
     const fileInput = document.getElementById('fileInput');
     const partValue = document.getElementById('part-value');
 
-    document.addEventListener('DOMContentLoaded', () => {
-      if (!window.THREE) {
-        info.textContent = 'Error: THREE.js not loaded (check internet / CDN)';
-        console.error('THREE.js not loaded');
-        return;
-      }
-
-      init();
-      animate();
-    });
-
     function init() {
       info.textContent = 'Viewer ready – choose a GLB file';
 
       scene = new THREE.Scene();
-      scene.background = null; // let the gradient show
+      scene.background = null;
 
       camera = new THREE.PerspectiveCamera(
         60,
@@ -276,12 +274,12 @@
       );
       camera.position.set(0, 2, 5);
 
-      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls = new OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
       controls.rotateSpeed = 0.7;
@@ -323,7 +321,7 @@
       partValue.textContent = '—';
 
       const url = URL.createObjectURL(file);
-      const loader = new THREE.GLTFLoader();
+      const loader = new GLTFLoader();
 
       loader.load(
         url,
@@ -400,6 +398,10 @@
         renderer.render(scene, camera);
       }
     }
+
+    // Start the application
+    init();
+    animate();
   </script>
 </body>
 </html>
