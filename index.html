@@ -247,6 +247,8 @@
     let scene, camera, renderer, controls;
     let raycaster, mouse;
     let modelRoot = null;
+    let selectedObject = null;
+    let originalMaterials = new Map();
 
     // Wait for THREE to load
     function checkThree() {
@@ -340,6 +342,7 @@
 
       info.textContent = 'Loading model...';
       partValue.textContent = '—';
+      clearSelection();
 
       const url = URL.createObjectURL(file);
       const loader = new THREE.GLTFLoader();
@@ -352,6 +355,14 @@
           }
           modelRoot = gltf.scene;
           scene.add(modelRoot);
+
+          // Store original materials for highlighting
+          originalMaterials.clear();
+          modelRoot.traverse((child) => {
+            if (child.isMesh && child.material) {
+              originalMaterials.set(child, child.material.clone());
+            }
+          });
 
           const box = new THREE.Box3().setFromObject(modelRoot);
           const size = box.getSize(new THREE.Vector3());
@@ -388,6 +399,84 @@
       );
     }
 
+    function clearSelection() {
+      if (selectedObject) {
+        // Restore original material
+        if (originalMaterials.has(selectedObject)) {
+          selectedObject.material = originalMaterials.get(selectedObject).clone();
+        }
+        selectedObject = null;
+      }
+    }
+
+    function highlightObject(obj) {
+      clearSelection();
+      
+      if (obj && obj.isMesh && obj.material) {
+        selectedObject = obj;
+        
+        // Create highlight material
+        const highlightMat = obj.material.clone();
+        
+        // Add emissive glow
+        if (highlightMat.emissive) {
+          highlightMat.emissive.setHex(0x00ffcc);
+          highlightMat.emissiveIntensity = 0.5;
+        } else {
+          highlightMat.emissive = new THREE.Color(0x00ffcc);
+          highlightMat.emissiveIntensity = 0.5;
+        }
+        
+        obj.material = highlightMat;
+      }
+    }
+
+    function findPartName(clickedObj) {
+      // Start from the clicked object and traverse up the hierarchy
+      let current = clickedObj;
+      let partName = null;
+      
+      // First, try to find the parent with a meaningful name
+      while (current) {
+        if (current.parent && current.parent.name && 
+            !current.parent.name.toLowerCase().includes('solid') &&
+            !current.parent.name.toLowerCase().includes('mesh') &&
+            !current.parent.name.toLowerCase().includes('scene') &&
+            current.parent.name !== '') {
+          partName = current.parent.name;
+          break;
+        }
+        current = current.parent;
+      }
+      
+      // If we didn't find a good parent name, try the object itself
+      if (!partName) {
+        current = clickedObj;
+        while (current) {
+          if (current.name && 
+              !current.name.toLowerCase().includes('solid') &&
+              !current.name.toLowerCase().includes('mesh') &&
+              !current.name.toLowerCase().includes('scene') &&
+              current.name !== '') {
+            partName = current.name;
+            break;
+          }
+          current = current.parent;
+        }
+      }
+      
+      // Last resort: use any name we can find
+      if (!partName) {
+        current = clickedObj;
+        while (current && (!current.name || current.name === '')) {
+          current = current.parent;
+        }
+        partName = current ? current.name : '(no part number found)';
+      }
+      
+      return partName || '(no part number found)';
+    }
+
     function onPointerDown(event) {
       if (!modelRoot) return;
 
@@ -400,15 +489,16 @@
 
       if (intersects.length > 0) {
         let obj = intersects[0].object;
-        let target = obj;
-        while (target && !target.name) {
-          target = target.parent;
-        }
-
-        const partName =
-          (target && target.name) || obj.name || '(no name on this mesh)';
-
+        
+        // Highlight the clicked mesh
+        highlightObject(obj);
+        
+        // Find the proper part name (looking at parent hierarchy)
+        const partName = findPartName(obj);
         partValue.textContent = partName;
+      } else {
+        clearSelection();
+        partValue.textContent = '—';
       }
     }
 
