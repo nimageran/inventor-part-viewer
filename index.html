@@ -48,7 +48,7 @@
       Load GLB:
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
-    <span id="info">No model loaded</span>
+    <span id="info">Initializing viewer...</span>
   </div>
 
   <!-- three.js + extras from CDN -->
@@ -64,10 +64,23 @@
     const info = document.getElementById('info');
     const fileInput = document.getElementById('fileInput');
 
-    init();
-    animate();
+    console.log('Viewer script starting');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // If THREE didn't load, this will fail and you'll see error in console
+      if (!window.THREE) {
+        info.textContent = 'Error: THREE.js not loaded (check internet / CDN)';
+        console.error('THREE.js not loaded');
+        return;
+      }
+
+      init();
+      animate();
+    });
 
     function init() {
+      info.textContent = 'Viewer ready – choose a GLB file';
+
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x202020);
 
@@ -105,6 +118,7 @@
     }
 
     function onWindowResize() {
+      if (!camera || !renderer) return;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -122,14 +136,12 @@
       loader.load(
         url,
         (gltf) => {
-          // Remove previous model if any
           if (modelRoot) {
             scene.remove(modelRoot);
           }
           modelRoot = gltf.scene;
           scene.add(modelRoot);
 
-          // Center and frame the model
           const box = new THREE.Box3().setFromObject(modelRoot);
           const size = box.getSize(new THREE.Vector3());
           const center = box.getCenter(new THREE.Vector3());
@@ -152,7 +164,7 @@
         undefined,
         (error) => {
           console.error(error);
-          info.textContent = 'Error loading model.';
+          info.textContent = 'Error loading model (see browser console).';
           URL.revokeObjectURL(url);
         }
       );
@@ -171,7 +183,6 @@
       if (intersects.length > 0) {
         let obj = intersects[0].object;
 
-        // climb up until we find a named parent if needed
         let target = obj;
         while (target && !target.name) {
           target = target.parent;
@@ -186,8 +197,10 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+      if (controls && renderer && camera && scene) {
+        controls.update();
+        renderer.render(scene, camera);
+      }
     }
   </script>
 </body>
