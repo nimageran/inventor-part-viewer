@@ -123,7 +123,7 @@
       left: 18px;
       top: 80px;
       bottom: 80px;
-      width: 320px;
+      width: 340px;
       background: linear-gradient(135deg, rgba(16, 22, 54, 0.93), rgba(19, 43, 88, 0.91));
       border-radius: 14px;
       border: 1px solid rgba(120, 220, 255, 0.35);
@@ -146,6 +146,30 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: #9ae6ff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #expand-all, #collapse-all {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(120, 220, 255, 0.3);
+      background: rgba(59, 130, 246, 0.15);
+      color: #7df9ff;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    #expand-all:hover, #collapse-all:hover {
+      background: rgba(59, 130, 246, 0.3);
+      border-color: rgba(120, 220, 255, 0.5);
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 6px;
     }
 
     #tree-content {
@@ -172,15 +196,21 @@
       background: rgba(120, 220, 255, 0.6);
     }
 
-    .tree-item {
-      padding: 8px 10px;
+    .tree-node {
       margin: 2px 0;
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
       border-radius: 6px;
       font-size: 12px;
       color: #cbd5e1;
       cursor: pointer;
       transition: all 0.15s ease;
       border: 1px solid transparent;
+      position: relative;
     }
 
     .tree-item:hover {
@@ -195,13 +225,63 @@
       box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
     }
 
-    .tree-item-name {
+    .tree-item.assembly {
       font-weight: 600;
       color: #e2e8f0;
     }
 
-    .tree-item.selected .tree-item-name {
+    .tree-item.part {
+      color: #94a3b8;
+    }
+
+    .tree-item.selected.part {
       color: #bbf7d0;
+    }
+
+    .tree-toggle {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 6px;
+      font-size: 10px;
+      color: #7df9ff;
+      flex-shrink: 0;
+    }
+
+    .tree-toggle.empty {
+      opacity: 0;
+    }
+
+    .tree-icon {
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 11px;
+    }
+
+    .tree-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tree-children {
+      margin-left: 20px;
+      display: none;
+      border-left: 1px solid rgba(120, 220, 255, 0.2);
+      padding-left: 4px;
+      margin-top: 2px;
+    }
+
+    .tree-children.expanded {
+      display: block;
     }
 
     #part-display {
@@ -274,7 +354,7 @@
 
     @media (max-width: 1024px) {
       #tree-panel {
-        width: 280px;
+        width: 300px;
       }
     }
 
@@ -283,7 +363,7 @@
         left: 8px;
         top: 70px;
         bottom: 120px;
-        width: 240px;
+        width: 260px;
       }
       #top-bar {
         max-width: 92vw;
@@ -313,10 +393,16 @@
   </div>
 
   <div id="tree-panel">
-    <div id="tree-header">Assembly Tree</div>
+    <div id="tree-header">
+      <span>Assembly Tree</span>
+      <div class="header-controls">
+        <button id="expand-all">Expand All</button>
+        <button id="collapse-all">Collapse</button>
+      </div>
+    </div>
     <div id="tree-content">
       <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px;">
-        Load a model to view parts
+        Load a model to view assembly
       </div>
     </div>
   </div>
@@ -340,13 +426,15 @@
     const partValue = document.getElementById('part-value');
     const partDescription = document.getElementById('part-description');
     const treeContent = document.getElementById('tree-content');
+    const expandAllBtn = document.getElementById('expand-all');
+    const collapseAllBtn = document.getElementById('collapse-all');
 
     let scene, camera, renderer, controls;
     let raycaster, mouse;
     let modelRoot = null;
     let selectedObject = null;
     let originalMaterials = new Map();
-    let partsList = [];
+    let objectToNodeMap = new Map();
 
     function checkThree() {
       if (typeof THREE === 'undefined') {
@@ -420,6 +508,8 @@
       window.addEventListener('resize', onWindowResize, false);
       renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
       fileInput.addEventListener('change', onFileSelected, false);
+      expandAllBtn.addEventListener('click', expandAll);
+      collapseAllBtn.addEventListener('click', collapseAll);
 
       animate();
     }
@@ -431,42 +521,121 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    function hasChildren(obj) {
+      return obj.children && obj.children.length > 0 && 
+             obj.children.some(child => child.name && child.name !== '');
+    }
+
+    function isMeshNode(obj) {
+      return obj.isMesh || (obj.children && obj.children.some(child => child.isMesh));
+    }
+
+    function buildTreeNode(obj, parentElement) {
+      if (!obj.name || obj.name === '' || obj.name.toLowerCase().includes('scene')) {
+        obj.children.forEach(child => buildTreeNode(child, parentElement));
+        return;
+      }
+
+      const nodeDiv = document.createElement('div');
+      nodeDiv.className = 'tree-node';
+
+      const itemDiv = document.createElement('div');
+      const hasMesh = isMeshNode(obj);
+      const children = hasChildren(obj);
+      
+      itemDiv.className = children ? 'tree-item assembly' : 'tree-item part';
+      
+      const toggleSpan = document.createElement('span');
+      toggleSpan.className = children ? 'tree-toggle' : 'tree-toggle empty';
+      toggleSpan.textContent = children ? '▶' : '';
+      
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'tree-icon';
+      iconSpan.textContent = children ? '📦' : '⚙️';
+      
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'tree-label';
+      labelSpan.textContent = obj.name;
+      
+      itemDiv.appendChild(toggleSpan);
+      itemDiv.appendChild(iconSpan);
+      itemDiv.appendChild(labelSpan);
+      
+      nodeDiv.appendChild(itemDiv);
+
+      if (children) {
+        const childrenDiv = document.createElement('div');
+        childrenDiv.className = 'tree-children';
+        
+        obj.children.forEach(child => {
+          if (child.name && child.name !== '') {
+            buildTreeNode(child, childrenDiv);
+          }
+        });
+        
+        nodeDiv.appendChild(childrenDiv);
+        
+        toggleSpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isExpanded = childrenDiv.classList.contains('expanded');
+          if (isExpanded) {
+            childrenDiv.classList.remove('expanded');
+            toggleSpan.textContent = '▶';
+          } else {
+            childrenDiv.classList.add('expanded');
+            toggleSpan.textContent = '▼';
+          }
+        });
+      }
+
+      if (hasMesh) {
+        itemDiv.addEventListener('click', (e) => {
+          if (e.target === toggleSpan) return;
+          selectObjectFromTree(obj);
+        });
+        
+        let meshObj = obj.isMesh ? obj : null;
+        if (!meshObj) {
+          obj.traverse(child => {
+            if (child.isMesh && !meshObj) meshObj = child;
+          });
+        }
+        if (meshObj) {
+          objectToNodeMap.set(meshObj, itemDiv);
+        }
+      }
+
+      parentElement.appendChild(nodeDiv);
+    }
+
     function buildPartsTree() {
-      partsList = [];
       treeContent.innerHTML = '';
+      objectToNodeMap.clear();
 
       if (!modelRoot) return;
 
-      modelRoot.traverse((obj) => {
-        if (obj.isMesh) {
-          const partInfo = getPartInfo(obj);
-          if (partInfo.name && !partInfo.name.includes('Scene')) {
-            partsList.push({ object: obj, info: partInfo });
-          }
+      buildTreeNode(modelRoot, treeContent);
+    }
+
+    function expandAll() {
+      document.querySelectorAll('.tree-children').forEach(child => {
+        child.classList.add('expanded');
+      });
+      document.querySelectorAll('.tree-toggle').forEach(toggle => {
+        if (toggle.textContent === '▶') {
+          toggle.textContent = '▼';
         }
       });
+    }
 
-      // Remove duplicates by name
-      const uniqueParts = [];
-      const seenNames = new Set();
-      partsList.forEach(part => {
-        if (!seenNames.has(part.info.name)) {
-          seenNames.add(part.info.name);
-          uniqueParts.push(part);
-        }
+    function collapseAll() {
+      document.querySelectorAll('.tree-children').forEach(child => {
+        child.classList.remove('expanded');
       });
-
-      uniqueParts.sort((a, b) => a.info.name.localeCompare(b.info.name));
-
-      uniqueParts.forEach(part => {
-        const item = document.createElement('div');
-        item.className = 'tree-item';
-        item.innerHTML = `<div class="tree-item-name">${part.info.name}</div>`;
-        if (part.info.description) {
-          item.innerHTML += `<div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${part.info.description}</div>`;
+      document.querySelectorAll('.tree-toggle').forEach(toggle => {
+        if (toggle.textContent === '▼') {
+          toggle.textContent = '▶';
         }
-        item.addEventListener('click', () => selectPartFromTree(part));
-        treeContent.appendChild(item);
       });
     }
 
@@ -475,43 +644,22 @@
       let partName = null;
       let description = null;
 
-      // Find parent with meaningful name
       while (current) {
-        if (current.parent && current.parent.name && 
-            !current.parent.name.toLowerCase().includes('solid') &&
-            !current.parent.name.toLowerCase().includes('mesh') &&
-            !current.parent.name.toLowerCase().includes('scene') &&
-            current.parent.name !== '') {
-          partName = current.parent.name;
+        if (current.name && 
+            !current.name.toLowerCase().includes('solid') &&
+            !current.name.toLowerCase().includes('mesh') &&
+            !current.name.toLowerCase().includes('scene') &&
+            current.name !== '') {
+          partName = current.name;
           
-          // Check for description in userData
-          if (current.parent.userData && current.parent.userData.description) {
-            description = current.parent.userData.description;
+          if (current.userData && current.userData.description) {
+            description = current.userData.description;
           }
           break;
         }
         current = current.parent;
       }
 
-      if (!partName) {
-        current = obj;
-        while (current) {
-          if (current.name && 
-              !current.name.toLowerCase().includes('solid') &&
-              !current.name.toLowerCase().includes('mesh') &&
-              !current.name.toLowerCase().includes('scene') &&
-              current.name !== '') {
-            partName = current.name;
-            if (current.userData && current.userData.description) {
-              description = current.userData.description;
-            }
-            break;
-          }
-          current = current.parent;
-        }
-      }
-
-      // Try to extract description from name if it contains a dash or colon
       if (!description && partName) {
         const match = partName.match(/[-:]\s*(.+)$/);
         if (match) {
@@ -525,19 +673,34 @@
       };
     }
 
-    function selectPartFromTree(part) {
-      highlightObject(part.object);
-      partValue.textContent = part.info.name;
-      partDescription.textContent = part.info.description;
-      
-      // Update tree selection
-      document.querySelectorAll('.tree-item').forEach(item => {
-        item.classList.remove('selected');
-      });
-      event.currentTarget.classList.add('selected');
+    function selectObjectFromTree(obj) {
+      let meshToHighlight = obj.isMesh ? obj : null;
+      if (!meshToHighlight) {
+        obj.traverse(child => {
+          if (child.isMesh && !meshToHighlight) {
+            meshToHighlight = child;
+          }
+        });
+      }
 
-      // Focus camera on part
-      focusOnObject(part.object);
+      if (meshToHighlight) {
+        highlightObject(meshToHighlight);
+        const partInfo = getPartInfo(meshToHighlight);
+        partValue.textContent = partInfo.name;
+        partDescription.textContent = partInfo.description;
+        
+        document.querySelectorAll('.tree-item').forEach(item => {
+          item.classList.remove('selected');
+        });
+        
+        if (objectToNodeMap.has(meshToHighlight)) {
+          const node = objectToNodeMap.get(meshToHighlight);
+          node.classList.add('selected');
+          node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        focusOnObject(meshToHighlight);
+      }
     }
 
     function focusOnObject(obj) {
@@ -661,16 +824,15 @@
         partValue.textContent = partInfo.name;
         partDescription.textContent = partInfo.description;
 
-        // Highlight in tree
-        const items = document.querySelectorAll('.tree-item');
-        items.forEach(item => {
-          if (item.querySelector('.tree-item-name').textContent === partInfo.name) {
-            item.classList.add('selected');
-            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          } else {
-            item.classList.remove('selected');
-          }
+        document.querySelectorAll('.tree-item').forEach(item => {
+          item.classList.remove('selected');
         });
+        
+        if (objectToNodeMap.has(obj)) {
+          const node = objectToNodeMap.get(obj);
+          node.classList.add('selected');
+          node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
       } else {
         clearSelection();
         partValue.textContent = '—';
