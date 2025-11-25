@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,6 @@
   <title>Inventor Part Scanner</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
-
     html, body {
       margin: 0;
       padding: 0;
@@ -16,7 +16,6 @@
       color: #f5f5f5;
       font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-
     body::before {
       content: "";
       position: fixed;
@@ -33,7 +32,6 @@
       opacity: 0.35;
       z-index: 0;
     }
-
     #top-bar {
       position: fixed;
       left: 50%;
@@ -54,7 +52,6 @@
       -webkit-backdrop-filter: blur(18px);
       font-size: 12px;
     }
-
     #brand {
       display: flex;
       align-items: center;
@@ -67,7 +64,6 @@
       padding-right: 12px;
       border-right: 1px solid rgba(144, 205, 244, 0.35);
     }
-
     #brand-dot {
       width: 8px;
       height: 8px;
@@ -76,12 +72,10 @@
       box-shadow: 0 0 12px #32ffb5;
       animation: pulse 2s ease-in-out infinite;
     }
-
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.6; }
     }
-
     #fileInput {
       font-size: 11px;
       color: #dbeafe;
@@ -91,7 +85,6 @@
       background: radial-gradient(circle at top left, rgba(59,130,246,0.25), rgba(15,23,42,0.9));
       cursor: pointer;
     }
-
     #fileInput::-webkit-file-upload-button,
     #fileInput::file-selector-button {
       font-size: 11px;
@@ -106,7 +99,6 @@
       font-weight: 600;
       cursor: pointer;
     }
-
     #info {
       margin-left: 8px;
       color: #7df9ff;
@@ -117,7 +109,6 @@
       font-size: 11px;
       opacity: 0.95;
     }
-
     #tree-panel {
       position: fixed;
       left: 18px;
@@ -137,7 +128,6 @@
       flex-direction: column;
       overflow: hidden;
     }
-
     #tree-header {
       padding: 12px 16px;
       border-bottom: 1px solid rgba(120, 220, 255, 0.25);
@@ -150,7 +140,6 @@
       justify-content: space-between;
       align-items: center;
     }
-
     #expand-all, #collapse-all {
       font-size: 10px;
       padding: 3px 8px;
@@ -161,45 +150,36 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-
     #expand-all:hover, #collapse-all:hover {
       background: rgba(59, 130, 246, 0.3);
       border-color: rgba(120, 220, 255, 0.5);
     }
-
     .header-controls {
       display: flex;
       gap: 6px;
     }
-
     #tree-content {
       flex: 1;
       overflow-y: auto;
       padding: 8px;
     }
-
     #tree-content::-webkit-scrollbar {
       width: 6px;
     }
-
     #tree-content::-webkit-scrollbar-track {
       background: rgba(15, 23, 42, 0.5);
       border-radius: 3px;
     }
-
     #tree-content::-webkit-scrollbar-thumb {
       background: rgba(120, 220, 255, 0.4);
       border-radius: 3px;
     }
-
     #tree-content::-webkit-scrollbar-thumb:hover {
       background: rgba(120, 220, 255, 0.6);
     }
-
     .tree-node {
       margin: 2px 0;
     }
-
     .tree-item {
       display: flex;
       align-items: center;
@@ -212,32 +192,26 @@
       border: 1px solid transparent;
       position: relative;
     }
-
     .tree-item:hover {
       background: rgba(59, 130, 246, 0.15);
       border-color: rgba(59, 130, 246, 0.3);
     }
-
     .tree-item.selected {
       background: radial-gradient(circle at top left, rgba(34,197,94,0.25), rgba(15,23,42,0.7));
       border-color: rgba(45,212,191,0.6);
       color: #bbf7d0;
       box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
     }
-
     .tree-item.assembly {
       font-weight: 600;
       color: #e2e8f0;
     }
-
     .tree-item.part {
       color: #94a3b8;
     }
-
     .tree-item.selected.part {
       color: #bbf7d0;
     }
-
     .tree-toggle {
       width: 16px;
       height: 16px;
@@ -249,11 +223,9 @@
       color: #7df9ff;
       flex-shrink: 0;
     }
-
     .tree-toggle.empty {
       opacity: 0;
     }
-
     .tree-icon {
       width: 16px;
       height: 16px;
@@ -264,14 +236,12 @@
       flex-shrink: 0;
       font-size: 11px;
     }
-
     .tree-label {
       flex: 1;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
     .tree-children {
       margin-left: 20px;
       display: none;
@@ -279,11 +249,9 @@
       padding-left: 4px;
       margin-top: 2px;
     }
-
     .tree-children.expanded {
       display: block;
     }
-
     #part-display {
       position: fixed;
       bottom: 24px;
@@ -305,21 +273,17 @@
       gap: 10px;
       overflow-y: auto;
     }
-
     #part-display::-webkit-scrollbar {
       width: 5px;
     }
-
     #part-display::-webkit-scrollbar-track {
       background: rgba(15, 23, 42, 0.5);
       border-radius: 3px;
     }
-
     #part-display::-webkit-scrollbar-thumb {
       background: rgba(45,212,191,0.5);
       border-radius: 3px;
     }
-
     #part-label {
       font-family: "Orbitron", system-ui, sans-serif;
       font-size: 10px;
@@ -329,7 +293,6 @@
       opacity: 0.9;
       margin-bottom: -4px;
     }
-
     #part-value {
       font-family: "Orbitron", system-ui, sans-serif;
       font-size: 18px;
@@ -340,31 +303,26 @@
       font-weight: 600;
       margin-bottom: 4px;
     }
-
     .metadata-grid {
       display: grid;
       grid-template-columns: auto 1fr;
       gap: 6px 12px;
       font-size: 12px;
     }
-
     .metadata-label {
       color: #7df9ff;
       font-weight: 500;
       white-space: nowrap;
     }
-
     .metadata-value {
       color: #d1fae5;
       word-break: break-word;
     }
-
     .metadata-section {
       margin-top: 8px;
       padding-top: 8px;
       border-top: 1px solid rgba(45,212,191,0.3);
     }
-
     .metadata-section-title {
       font-size: 10px;
       text-transform: uppercase;
@@ -373,7 +331,6 @@
       margin-bottom: 6px;
       font-family: "Orbitron", system-ui, sans-serif;
     }
-
     #hint {
       position: fixed;
       right: 18px;
@@ -385,23 +342,19 @@
       text-align: right;
       pointer-events: none;
     }
-
     #hint span {
       color: #38bdf8;
     }
-
     canvas {
       display: block;
       position: relative;
       z-index: 1;
     }
-
     @media (max-width: 1024px) {
       #tree-panel {
         width: 300px;
       }
     }
-
     @media (max-width: 768px) {
       #tree-panel {
         left: 8px;
@@ -409,23 +362,19 @@
         bottom: 120px;
         width: 260px;
       }
-
       #top-bar {
         max-width: 92vw;
         padding-inline: 12px;
       }
-
       #info {
         display: none;
       }
-
       #part-display {
         bottom: 20px;
         max-width: 88vw;
         min-width: 260px;
       }
     }
-
   </style>
 </head>
 <body>
@@ -439,7 +388,6 @@
     </label>
     <span id="info">Loading viewer...</span>
   </div>
-
   <div id="tree-panel">
     <div id="tree-header">
       <span>Assembly Tree</span>
@@ -454,18 +402,15 @@
       </div>
     </div>
   </div>
-
   <div id="part-display">
     <div id="part-label">SELECTED PART</div>
     <div id="part-value">—</div>
     <div id="part-details"></div>
   </div>
-
   <div id="hint">
     <div>Rotate: <span>left drag</span> • Pan: <span>right/middle drag</span></div>
     <div>Zoom: <span>scroll</span> • Select: <span>click part</span></div>
   </div>
-
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
     const info = document.getElementById('info');
@@ -475,14 +420,12 @@
     const treeContent = document.getElementById('tree-content');
     const expandAllBtn = document.getElementById('expand-all');
     const collapseAllBtn = document.getElementById('collapse-all');
-
     let scene, camera, renderer, controls;
     let raycaster, mouse;
     let modelRoot = null;
     let selectedObject = null;
     let originalMaterials = new Map();
     let objectToNodeMap = new Map();
-
     function checkThree() {
       if (typeof THREE === 'undefined') {
         info.textContent = 'Loading Three.js...';
@@ -491,7 +434,6 @@
       }
       loadOrbitControls();
     }
-
     function loadOrbitControls() {
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
@@ -501,7 +443,6 @@
       };
       document.head.appendChild(script);
     }
-
     function loadGLTFLoader() {
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
@@ -511,13 +452,10 @@
       };
       document.head.appendChild(script);
     }
-
     function init() {
       info.textContent = 'Viewer ready – choose a GLB file';
-
       scene = new THREE.Scene();
       scene.background = null;
-
       camera = new THREE.PerspectiveCamera(
         60,
         window.innerWidth / window.innerHeight,
@@ -525,12 +463,10 @@
         2000
       );
       camera.position.set(0, 2, 5);
-
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
-
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
@@ -540,59 +476,183 @@
       controls.screenSpacePanning = true;
       controls.minDistance = 0.1;
       controls.maxDistance = 5000;
-
+     
       // Autodesk Viewer style controls
       controls.mouseButtons = {
         LEFT: THREE.MOUSE.ROTATE,
         MIDDLE: THREE.MOUSE.PAN,
         RIGHT: THREE.MOUSE.PAN
       };
-
       const hemi = new THREE.HemisphereLight(0xbfefff, 0x1f2937, 1.0);
       hemi.position.set(0, 50, 0);
       scene.add(hemi);
-
       const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
       dir1.position.set(25, 30, 18);
       scene.add(dir1);
-
       const dir2 = new THREE.DirectionalLight(0x38bdf8, 0.5);
       dir2.position.set(-20, -10, -15);
       scene.add(dir2);
-
       raycaster = new THREE.Raycaster();
       mouse = new THREE.Vector2();
-
       window.addEventListener('resize', onWindowResize, false);
       renderer.domElement.addEventListener('click', onPointerClick, false);
       fileInput.addEventListener('change', onFileSelected, false);
       expandAllBtn.addEventListener('click', expandAll);
       collapseAllBtn.addEventListener('click', collapseAll);
-
       animate();
     }
-
     function onWindowResize() {
       if (!camera || !renderer) return;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
-
     function hasChildren(obj) {
       return obj.children && obj.children.length > 0 &&
              obj.children.some(child => child.name && child.name !== '');
     }
-
     function isMeshNode(obj) {
       return obj.isMesh || (obj.children && obj.children.some(child => child.isMesh));
     }
-
-    // 🔧 NEW: smarter metadata extraction; more tolerant, and shows more CAD properties
+    function getDisplayName(obj) {
+      let name = 'Unknown';
+      // First, check userData on chain for 'name' case-insensitive
+      let current = obj;
+      while (current) {
+        if (current.userData && Object.keys(current.userData).length > 0) {
+          const nameKey = Object.keys(current.userData).find(k => k.toLowerCase() === 'name');
+          if (nameKey) {
+            name = current.userData[nameKey];
+            break;
+          }
+        }
+        current = current.parent;
+      }
+      // If not found, fall back to obj.name chain
+      if (name === 'Unknown') {
+        current = obj;
+        while (current) {
+          if (current.name &&
+              !current.name.toLowerCase().includes('solid') &&
+              !current.name.toLowerCase().includes('mesh') &&
+              !current.name.toLowerCase().includes('scene') &&
+              current.name !== '') {
+            name = current.name;
+            break;
+          }
+          current = current.parent;
+        }
+      }
+      return name;
+    }
+    function buildTreeNode(obj, parentElement) {
+      const displayName = getDisplayName(obj);
+      if (displayName === 'Unknown' || displayName.toLowerCase().includes('scene')) {
+        obj.children.forEach(child => buildTreeNode(child, parentElement));
+        return;
+      }
+      const nodeDiv = document.createElement('div');
+      nodeDiv.className = 'tree-node';
+      const itemDiv = document.createElement('div');
+      const hasMesh = isMeshNode(obj);
+      const children = hasChildren(obj);
+     
+      itemDiv.className = children ? 'tree-item assembly' : 'tree-item part';
+     
+      const toggleSpan = document.createElement('span');
+      toggleSpan.className = children ? 'tree-toggle' : 'tree-toggle empty';
+      toggleSpan.textContent = children ? '▶' : '';
+     
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'tree-icon';
+      iconSpan.textContent = children ? '📦' : '⚙️';
+     
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'tree-label';
+      labelSpan.textContent = displayName;
+     
+      itemDiv.appendChild(toggleSpan);
+      itemDiv.appendChild(iconSpan);
+      itemDiv.appendChild(labelSpan);
+     
+      nodeDiv.appendChild(itemDiv);
+      if (children) {
+        const childrenDiv = document.createElement('div');
+        childrenDiv.className = 'tree-children';
+       
+        obj.children.forEach(child => {
+          if (child.name && child.name !== '') {
+            buildTreeNode(child, childrenDiv);
+          }
+        });
+       
+        nodeDiv.appendChild(childrenDiv);
+       
+        toggleSpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isExpanded = childrenDiv.classList.contains('expanded');
+          if (isExpanded) {
+            childrenDiv.classList.remove('expanded');
+            toggleSpan.textContent = '▶';
+          } else {
+            childrenDiv.classList.add('expanded');
+            toggleSpan.textContent = '▼';
+          }
+        });
+      }
+      if (hasMesh) {
+        itemDiv.addEventListener('click', (e) => {
+          if (e.target === toggleSpan) return;
+          selectObjectFromTree(obj);
+        });
+       
+        let meshObj = obj.isMesh ? obj : null;
+        if (!meshObj) {
+          obj.traverse(child => {
+            if (child.isMesh && !meshObj) meshObj = child;
+          });
+        }
+        if (meshObj) {
+          objectToNodeMap.set(meshObj, itemDiv);
+        }
+      }
+      parentElement.appendChild(nodeDiv);
+    }
+    function buildPartsTree() {
+      treeContent.innerHTML = '';
+      objectToNodeMap.clear();
+      if (!modelRoot) return;
+      buildTreeNode(modelRoot, treeContent);
+    }
+    function expandAll() {
+      document.querySelectorAll('.tree-children').forEach(child => {
+        child.classList.add('expanded');
+      });
+      document.querySelectorAll('.tree-toggle').forEach(toggle => {
+        if (toggle.textContent === '▶') {
+          toggle.textContent = '▼';
+        }
+      });
+    }
+    function collapseAll() {
+      document.querySelectorAll('.tree-children').forEach(child => {
+        child.classList.remove('expanded');
+      });
+      document.querySelectorAll('.tree-toggle').forEach(toggle => {
+        if (toggle.textContent === '▼') {
+          toggle.textContent = '▶';
+        }
+      });
+    }
     function extractAllMetadata(obj) {
       const metadata = {
         name: 'Unknown',
         type: null,
+        title: null,
+        subject: null,
+        author: null,
+        keywords: null,
+        comments: null,
         description: null,
         material: null,
         partNumber: null,
@@ -607,111 +667,55 @@
         materialInfo: {},
         custom: {}
       };
-
-      // Fallback name from hierarchy
-      let current = obj;
-      while (current) {
-        if (
-          current.name &&
-          current.name !== '' &&
-          !current.name.toLowerCase().includes('solid') &&
-          !current.name.toLowerCase().includes('mesh') &&
-          !current.name.toLowerCase().includes('scene')
-        ) {
-          metadata.name = current.name;
-          break;
-        }
-        current = current.parent;
-      }
-
+      // Extract name preferring userData.name
+      metadata.name = getDisplayName(obj);
       // Determine object type
       if (obj.isMesh) {
         metadata.type = 'Part';
       } else if (obj.children && obj.children.length > 0) {
         metadata.type = 'Assembly';
       }
-
-      // Collect all userData up the hierarchy
-      current = obj;
+      // Extract userData (custom properties from CAD)
+      let current = obj;
       while (current) {
         if (current.userData && Object.keys(current.userData).length > 0) {
           Object.assign(metadata.userData, current.userData);
+         
+          // Common Inventor/CAD properties, case-insensitive
+          Object.entries(current.userData).forEach(([key, value]) => {
+            const lower = key.toLowerCase();
+            if (lower === 'title') metadata.title = value;
+            if (lower === 'subject') metadata.subject = value;
+            if (lower === 'author') metadata.author = value;
+            if (lower === 'keywords') metadata.keywords = value;
+            if (lower === 'comments') metadata.comments = value;
+            if (lower === 'description') metadata.description = value;
+            if (lower === 'partnumber') metadata.partNumber = value;
+            if (lower === 'stock') metadata.stock = value;
+            if (lower === 'mass') metadata.mass = value;
+            if (lower === 'volume') metadata.volume = value;
+            if (lower === 'area') metadata.surfaceArea = value;
+            if (lower === 'material') metadata.material = value;
+            if (lower === 'manufacturer') metadata.manufacturer = value;
+            if (lower === 'parttype') metadata.partType = value;
+          });
         }
         current = current.parent;
       }
-
-      const usedKeys = new Set();
-
-      if (metadata.userData && Object.keys(metadata.userData).length > 0) {
-        const allKeys = Object.keys(metadata.userData);
-
-        function findKey(candidates) {
-          // Exact match
-          for (const key of allKeys) {
-            const lower = key.toLowerCase();
-            for (const cand of candidates) {
-              if (lower === cand) return key;
-            }
-          }
-          // Substring match (for things like "iProperty.Description" or "Part Description")
-          for (const key of allKeys) {
-            const lower = key.toLowerCase();
-            for (const cand of candidates) {
-              if (lower.includes(cand)) return key;
-            }
-          }
-          return null;
-        }
-
-        function assignField(fieldName, candidates) {
-          if (metadata[fieldName]) return;
-          const key = findKey(candidates);
-          if (key && metadata.userData[key] != null && metadata.userData[key] !== '') {
-            metadata[fieldName] = metadata.userData[key];
-            usedKeys.add(key);
-          }
-        }
-
-        // Prefer a custom "name" property (e.g. A-24942:1)
-        const nameKey = findKey(['name']);
-        if (nameKey && metadata.userData[nameKey]) {
-          metadata.name = metadata.userData[nameKey];
-          usedKeys.add(nameKey);
-        }
-
-        // Common Inventor / CAD properties (second tab stuff like Description)
-        assignField('description', ['description', 'desc']);
-        assignField('partNumber', ['partnumber', 'part number', 'pn']);
-        assignField('stock', ['stock']);
-        assignField('mass', ['mass']);
-        assignField('volume', ['volume']);
-        assignField('surfaceArea', ['area', 'surfacearea', 'surface area']);
-        assignField('material', ['material']);
-        assignField('manufacturer', ['manufacturer', 'mfg']);
-        assignField('partType', ['parttype', 'part type']);
-
-        // Everything else stays visible under Custom Properties
-        Object.keys(metadata.userData).forEach(key => {
-          if (!usedKeys.has(key)) {
-            metadata.custom[key] = metadata.userData[key];
-          }
-        });
-      }
-
-      // Geometry info
+      // Extract geometry information
       if (obj.isMesh && obj.geometry) {
         const geo = obj.geometry;
-
+       
         if (geo.attributes && geo.attributes.position) {
           metadata.geometry.vertices = geo.attributes.position.count;
         }
-
+       
         if (geo.index) {
           metadata.geometry.triangles = geo.index.count / 3;
         } else if (geo.attributes && geo.attributes.position) {
           metadata.geometry.triangles = geo.attributes.position.count / 3;
         }
-
+        // Calculate bounding box
         if (!geo.boundingBox) {
           geo.computeBoundingBox();
         }
@@ -726,12 +730,11 @@
           };
         }
       }
-
-      // Material info
+      // Extract material information
       if (obj.isMesh && obj.material) {
         const mat = obj.material;
         metadata.materialInfo.type = mat.type;
-
+       
         if (mat.color) {
           metadata.materialInfo.color = '#' + mat.color.getHexString();
         }
@@ -748,21 +751,32 @@
           metadata.materialInfo.name = mat.name;
         }
       }
-
+      // Extract any custom properties from userData
+      if (metadata.userData) {
+        Object.keys(metadata.userData).forEach(key => {
+          const lowerKey = key.toLowerCase();
+          if (!['name', 'title', 'subject', 'author', 'keywords', 'comments', 'description', 'partnumber', 'stock', 'mass', 'volume', 'area', 'material', 'manufacturer', 'parttype'].includes(lowerKey)) {
+            metadata.custom[key] = metadata.userData[key];
+          }
+        });
+      }
       return metadata;
     }
-
     function displayMetadata(metadata) {
       let html = '';
-
       // Basic info
       const basicInfo = [];
       if (metadata.type) basicInfo.push({ label: 'Type', value: metadata.type });
       if (metadata.description) basicInfo.push({ label: 'Description', value: metadata.description });
+      if (metadata.title) basicInfo.push({ label: 'Title', value: metadata.title });
+      if (metadata.subject) basicInfo.push({ label: 'Subject', value: metadata.subject });
+      if (metadata.author) basicInfo.push({ label: 'Author', value: metadata.author });
+      if (metadata.keywords) basicInfo.push({ label: 'Keywords', value: metadata.keywords });
+      if (metadata.comments) basicInfo.push({ label: 'Comments', value: metadata.comments });
       if (metadata.partNumber) basicInfo.push({ label: 'Part Number', value: metadata.partNumber });
       if (metadata.manufacturer) basicInfo.push({ label: 'Manufacturer', value: metadata.manufacturer });
       if (metadata.partType) basicInfo.push({ label: 'Part Type', value: metadata.partType });
-
+     
       if (basicInfo.length > 0) {
         html += '<div class="metadata-grid">';
         basicInfo.forEach(item => {
@@ -771,7 +785,6 @@
         });
         html += '</div>';
       }
-
       // Physical properties
       const physicalProps = [];
       if (metadata.material) physicalProps.push({ label: 'Material', value: metadata.material });
@@ -779,7 +792,7 @@
       if (metadata.mass) physicalProps.push({ label: 'Mass', value: metadata.mass });
       if (metadata.volume) physicalProps.push({ label: 'Volume', value: metadata.volume });
       if (metadata.surfaceArea) physicalProps.push({ label: 'Surface Area', value: metadata.surfaceArea });
-
+     
       if (physicalProps.length > 0) {
         html += '<div class="metadata-section">';
         html += '<div class="metadata-section-title">Physical Properties</div>';
@@ -790,13 +803,12 @@
         });
         html += '</div></div>';
       }
-
       // Geometry info
       if (metadata.geometry && Object.keys(metadata.geometry).length > 0) {
         html += '<div class="metadata-section">';
         html += '<div class="metadata-section-title">Geometry</div>';
         html += '<div class="metadata-grid">';
-
+       
         if (metadata.geometry.vertices) {
           html += `<div class="metadata-label">Vertices:</div>`;
           html += `<div class="metadata-value">${metadata.geometry.vertices.toLocaleString()}</div>`;
@@ -809,16 +821,15 @@
           html += `<div class="metadata-label">Dimensions:</div>`;
           html += `<div class="metadata-value">${metadata.geometry.dimensions.x} × ${metadata.geometry.dimensions.y} × ${metadata.geometry.dimensions.z}</div>`;
         }
-
+       
         html += '</div></div>';
       }
-
       // Material info
       if (metadata.materialInfo && Object.keys(metadata.materialInfo).length > 0) {
         html += '<div class="metadata-section">';
         html += '<div class="metadata-section-title">Material Properties</div>';
         html += '<div class="metadata-grid">';
-
+       
         if (metadata.materialInfo.name) {
           html += `<div class="metadata-label">Name:</div>`;
           html += `<div class="metadata-value">${escapeHtml(metadata.materialInfo.name)}</div>`;
@@ -839,16 +850,15 @@
           html += `<div class="metadata-label">Roughness:</div>`;
           html += `<div class="metadata-value">${metadata.materialInfo.roughness}</div>`;
         }
-
+       
         html += '</div></div>';
       }
-
-      // Custom properties (all extra CAD props, including second-tab type stuff)
+      // Custom properties
       if (metadata.custom && Object.keys(metadata.custom).length > 0) {
         html += '<div class="metadata-section">';
         html += '<div class="metadata-section-title">Custom Properties</div>';
         html += '<div class="metadata-grid">';
-
+       
         Object.keys(metadata.custom).forEach(key => {
           let value = metadata.custom[key];
           if (typeof value === 'object') {
@@ -857,146 +867,19 @@
           html += `<div class="metadata-label">${escapeHtml(key)}:</div>`;
           html += `<div class="metadata-value">${escapeHtml(String(value))}</div>`;
         });
-
+       
         html += '</div></div>';
       }
-
       if (html === '') {
         html = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Click on a part to view details</div>';
       }
-
       partDetails.innerHTML = html;
     }
-
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
     }
-
-    function buildTreeNode(obj, parentElement) {
-      if (!obj.name || obj.name === '' || obj.name.toLowerCase().includes('scene')) {
-        obj.children.forEach(child => buildTreeNode(child, parentElement));
-        return;
-      }
-
-      const nodeDiv = document.createElement('div');
-      nodeDiv.className = 'tree-node';
-
-      const itemDiv = document.createElement('div');
-      const hasMesh = isMeshNode(obj);
-      const children = hasChildren(obj);
-
-      itemDiv.className = children ? 'tree-item assembly' : 'tree-item part';
-
-      const toggleSpan = document.createElement('span');
-      toggleSpan.className = children ? 'tree-toggle' : 'tree-toggle empty';
-      toggleSpan.textContent = children ? '▶' : '';
-
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'tree-icon';
-      iconSpan.textContent = children ? '📦' : '⚙️';
-
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'tree-label';
-
-      // Default label from object name
-      let labelText = obj.name || '';
-      let meshObj = null;
-
-      if (hasMesh) {
-        meshObj = obj.isMesh ? obj : null;
-        if (!meshObj) {
-          obj.traverse(child => {
-            if (child.isMesh && !meshObj) meshObj = child;
-          });
-        }
-
-        // For leaf parts, prefer metadata.name (which uses userData.name / Inventor name)
-        if (!children && meshObj) {
-          const md = extractAllMetadata(meshObj);
-          if (md && md.name) {
-            labelText = md.name;
-          }
-        }
-      }
-
-      labelSpan.textContent = labelText;
-
-      itemDiv.appendChild(toggleSpan);
-      itemDiv.appendChild(iconSpan);
-      itemDiv.appendChild(labelSpan);
-
-      nodeDiv.appendChild(itemDiv);
-
-      if (children) {
-        const childrenDiv = document.createElement('div');
-        childrenDiv.className = 'tree-children';
-
-        obj.children.forEach(child => {
-          if (child.name && child.name !== '') {
-            buildTreeNode(child, childrenDiv);
-          }
-        });
-
-        nodeDiv.appendChild(childrenDiv);
-
-        toggleSpan.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const isExpanded = childrenDiv.classList.contains('expanded');
-          if (isExpanded) {
-            childrenDiv.classList.remove('expanded');
-            toggleSpan.textContent = '▶';
-          } else {
-            childrenDiv.classList.add('expanded');
-            toggleSpan.textContent = '▼';
-          }
-        });
-      }
-
-      if (hasMesh) {
-        itemDiv.addEventListener('click', (e) => {
-          if (e.target === toggleSpan) return;
-          selectObjectFromTree(obj);
-        });
-
-        if (meshObj) {
-          objectToNodeMap.set(meshObj, itemDiv);
-        }
-      }
-
-      parentElement.appendChild(nodeDiv);
-    }
-
-    function buildPartsTree() {
-      treeContent.innerHTML = '';
-      objectToNodeMap.clear();
-      if (!modelRoot) return;
-      buildTreeNode(modelRoot, treeContent);
-    }
-
-    function expandAll() {
-      document.querySelectorAll('.tree-children').forEach(child => {
-        child.classList.add('expanded');
-      });
-      document.querySelectorAll('.tree-toggle').forEach(toggle => {
-        if (toggle.textContent === '▶') {
-          toggle.textContent = '▼';
-        }
-      });
-    }
-
-    function collapseAll() {
-      document.querySelectorAll('.tree-children').forEach(child => {
-        child.classList.remove('expanded');
-      });
-      document.querySelectorAll('.tree-toggle').forEach(toggle => {
-        if (toggle.textContent === '▼') {
-          toggle.textContent = '▶';
-        }
-      });
-    }
-
     function selectObjectFromTree(obj) {
       let meshToHighlight = obj.isMesh ? obj : null;
       if (!meshToHighlight) {
@@ -1011,41 +894,35 @@
         const metadata = extractAllMetadata(meshToHighlight);
         partValue.textContent = metadata.name;
         displayMetadata(metadata);
-
+       
         document.querySelectorAll('.tree-item').forEach(item => {
           item.classList.remove('selected');
         });
-
+       
         if (objectToNodeMap.has(meshToHighlight)) {
           const node = objectToNodeMap.get(meshToHighlight);
           node.classList.add('selected');
           node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-
         focusOnObject(meshToHighlight);
       }
     }
-
     function focusOnObject(obj) {
       const box = new THREE.Box3().setFromObject(obj);
       const center = box.getCenter(new THREE.Vector3());
-
+     
       controls.target.copy(center);
       controls.update();
     }
-
     function onFileSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       info.textContent = 'Loading model...';
       partValue.textContent = '—';
       partDetails.innerHTML = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Loading...</div>';
       clearSelection();
-
       const url = URL.createObjectURL(file);
       const loader = new THREE.GLTFLoader();
-
       loader.load(
         url,
         (gltf) => {
@@ -1054,34 +931,27 @@
           }
           modelRoot = gltf.scene;
           scene.add(modelRoot);
-
           originalMaterials.clear();
           modelRoot.traverse((child) => {
             if (child.isMesh && child.material) {
               originalMaterials.set(child, child.material.clone());
             }
           });
-
           const box = new THREE.Box3().setFromObject(modelRoot);
           const size = box.getSize(new THREE.Vector3());
           const center = box.getCenter(new THREE.Vector3());
           modelRoot.position.sub(center);
-
           const maxDim = Math.max(size.x, size.y, size.z);
           const fov = camera.fov * (Math.PI / 180);
           let cameraZ = maxDim / (2 * Math.tan(fov / 2));
           cameraZ *= 1.6;
-
           camera.position.set(0, maxDim * 0.35, cameraZ);
           camera.lookAt(0, 0, 0);
           controls.target.set(0, 0, 0);
           controls.update();
-
           buildPartsTree();
-
           info.textContent = 'Model loaded. Click a part to scan its details.';
           partDetails.innerHTML = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Click on a part to view details</div>';
-
           URL.revokeObjectURL(url);
         },
         (xhr) => {
@@ -1097,7 +967,6 @@
         }
       );
     }
-
     function clearSelection() {
       if (selectedObject) {
         if (originalMaterials.has(selectedObject)) {
@@ -1109,14 +978,13 @@
         item.classList.remove('selected');
       });
     }
-
     function highlightObject(obj) {
       clearSelection();
-
+     
       if (obj && obj.isMesh && obj.material) {
         selectedObject = obj;
         const highlightMat = obj.material.clone();
-
+       
         if (highlightMat.emissive) {
           highlightMat.emissive.setHex(0x00ffcc);
           highlightMat.emissiveIntensity = 0.5;
@@ -1124,33 +992,28 @@
           highlightMat.emissive = new THREE.Color(0x00ffcc);
           highlightMat.emissiveIntensity = 0.5;
         }
-
+       
         obj.material = highlightMat;
       }
     }
-
     function onPointerClick(event) {
       if (!modelRoot) return;
-
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(scene.children, true);
-
       if (intersects.length > 0) {
         let obj = intersects[0].object;
         highlightObject(obj);
-
+       
         const metadata = extractAllMetadata(obj);
         partValue.textContent = metadata.name;
         displayMetadata(metadata);
-
         document.querySelectorAll('.tree-item').forEach(item => {
           item.classList.remove('selected');
         });
-
+       
         if (objectToNodeMap.has(obj)) {
           const node = objectToNodeMap.get(obj);
           node.classList.add('selected');
@@ -1162,7 +1025,6 @@
         partDetails.innerHTML = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Click on a part to view details</div>';
       }
     }
-
     function animate() {
       requestAnimationFrame(animate);
       if (controls && renderer && camera && scene) {
@@ -1170,8 +1032,8 @@
         renderer.render(scene, camera);
       }
     }
-
     checkThree();
   </script>
 </body>
 </html>
+```
