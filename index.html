@@ -458,8 +458,8 @@
   </div>
 
   <div id="hint">
-    <div>Rotate: drag • Zoom: wheel</div>
-    <div>Pick part: <span>click on model or tree</span></div>
+    <div>Rotate: <span>left drag</span> • Pan: <span>right/middle drag</span></div>
+    <div>Zoom: <span>scroll</span> • Select: <span>click part</span></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -531,8 +531,19 @@
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.rotateSpeed = 0.7;
-      controls.zoomSpeed = 0.9;
+      controls.rotateSpeed = 0.5;
+      controls.zoomSpeed = 1.2;
+      controls.panSpeed = 0.8;
+      controls.screenSpacePanning = true;
+      controls.minDistance = 0.1;
+      controls.maxDistance = 5000;
+      
+      // Autodesk Viewer style controls
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.PAN,
+        RIGHT: THREE.MOUSE.PAN
+      };
 
       const hemi = new THREE.HemisphereLight(0xbfefff, 0x1f2937, 1.0);
       hemi.position.set(0, 50, 0);
@@ -550,7 +561,7 @@
       mouse = new THREE.Vector2();
 
       window.addEventListener('resize', onWindowResize, false);
-      renderer.domElement.addEventListener('pointerdown', onPointerDown, false);
+      renderer.domElement.addEventListener('click', onPointerClick, false);
       fileInput.addEventListener('change', onFileSelected, false);
       expandAllBtn.addEventListener('click', expandAll);
       collapseAllBtn.addEventListener('click', collapseAll);
@@ -823,7 +834,7 @@
         html += '<div class="metadata-grid">';
         basicInfo.forEach(item => {
           html += `<div class="metadata-label">${item.label}:</div>`;
-          html += `<div class="metadata-value">${item.value}</div>`;
+          html += `<div class="metadata-value">${escapeHtml(item.value)}</div>`;
         });
         html += '</div>';
       }
@@ -842,7 +853,7 @@
         html += '<div class="metadata-grid">';
         physicalProps.forEach(item => {
           html += `<div class="metadata-label">${item.label}:</div>`;
-          html += `<div class="metadata-value">${item.value}</div>`;
+          html += `<div class="metadata-value">${escapeHtml(item.value)}</div>`;
         });
         html += '</div></div>';
       }
@@ -877,11 +888,11 @@
         
         if (metadata.materialInfo.name) {
           html += `<div class="metadata-label">Name:</div>`;
-          html += `<div class="metadata-value">${metadata.materialInfo.name}</div>`;
+          html += `<div class="metadata-value">${escapeHtml(metadata.materialInfo.name)}</div>`;
         }
         if (metadata.materialInfo.type) {
           html += `<div class="metadata-label">Type:</div>`;
-          html += `<div class="metadata-value">${metadata.materialInfo.type}</div>`;
+          html += `<div class="metadata-value">${escapeHtml(metadata.materialInfo.type)}</div>`;
         }
         if (metadata.materialInfo.color) {
           html += `<div class="metadata-label">Color:</div>`;
@@ -910,8 +921,8 @@
           if (typeof value === 'object') {
             value = JSON.stringify(value);
           }
-          html += `<div class="metadata-label">${key}:</div>`;
-          html += `<div class="metadata-value">${value}</div>`;
+          html += `<div class="metadata-label">${escapeHtml(key)}:</div>`;
+          html += `<div class="metadata-value">${escapeHtml(String(value))}</div>`;
         });
         
         html += '</div></div>';
@@ -922,6 +933,12 @@
       }
 
       partDetails.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     function selectObjectFromTree(obj) {
@@ -1057,7 +1074,7 @@
       }
     }
 
-    function onPointerDown(event) {
+    function onPointerClick(event) {
       if (!modelRoot) return;
 
       const rect = renderer.domElement.getBoundingClientRect();
