@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Part Scanner - Multi-Theme</title>
+  <title>Inventor Part Scanner - Excel & CSV Only</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
 
-    /* 1. CSS VARIABLES - The engine for swapping themes */
+    /* ------------------------------------------------------------------
+       THEME VARIABLES
+       ------------------------------------------------------------------ */
     :root {
-      /* Default to LIGHT THEME variables initially, will be overwritten by JS */
+      /* Default to LIGHT THEME variables initially */
       --bg-gradient: radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%);
       --grid-color: rgba(0, 0, 0, 0.05);
       --text-main: #1e293b;
@@ -42,7 +44,6 @@
       transition: background 0.5s ease, color 0.5s ease;
     }
 
-    /* The background grid pattern */
     body::before {
       content: "";
       position: fixed;
@@ -106,7 +107,6 @@
       50% { opacity: 0.6; transform: scale(0.9); }
     }
 
-    /* Inputs and Selects */
     .file-label, select {
       font-size: 11px;
       color: var(--text-main);
@@ -141,7 +141,7 @@
       border: none;
       margin-right: 6px;
       background: var(--highlight-color);
-      color: #fff; /* Always white text on buttons for contrast */
+      color: #fff;
       font-weight: 600;
       cursor: pointer;
       text-transform: uppercase;
@@ -214,7 +214,6 @@
       overflow-y: auto;
       padding: 8px;
     }
-    /* Scrollbar styling */
     #tree-content::-webkit-scrollbar { width: 5px; }
     #tree-content::-webkit-scrollbar-track { background: transparent; }
     #tree-content::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
@@ -233,9 +232,7 @@
       user-select: none;
     }
 
-    .tree-item:hover {
-      background: var(--button-bg);
-    }
+    .tree-item:hover { background: var(--button-bg); }
 
     .tree-item.selected {
       background: var(--selected-bg);
@@ -302,7 +299,6 @@
       font-weight: 600;
     }
 
-    /* Metadata Grid */
     .metadata-grid {
       display: grid;
       grid-template-columns: auto 1fr;
@@ -325,7 +321,6 @@
       font-family: var(--brand-font);
     }
 
-    /* Hint Overlay */
     #hint {
       position: fixed; right: 18px; bottom: 18px;
       font-size: 10px; opacity: 0.5; color: var(--text-muted);
@@ -361,8 +356,9 @@
     <label class="file-label">
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
+    <!-- RESTRICTED TO CSV and EXCEL ONLY -->
     <label class="file-label">
-      <input type="file" id="bomInput" accept=".csv,.xml" />
+      <input type="file" id="bomInput" accept=".csv,.xlsx,.xls" />
     </label>
     <span id="info">Loading viewer...</span>
   </div>
@@ -393,10 +389,14 @@
     <div>Zoom: <span>Scroll</span> • Select: <span>Click</span></div>
   </div>
 
+  <!-- Three.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- SheetJS Library for reading Excel files -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
   <script>
     /* ------------------------------------------------------------------
-       THEME MANAGEMENT SYSTEM
+       THEME MANAGEMENT
        ------------------------------------------------------------------ */
     const themes = {
       light: {
@@ -453,7 +453,7 @@
         '--panel-bg': 'rgba(16, 22, 54, 0.9)',
         '--panel-border': 'rgba(56, 189, 248, 0.3)',
         '--panel-shadow': '0 0 20px rgba(14, 165, 233, 0.25)',
-        '--button-bg': 'rgba(56, 189, 248, 0.15)',
+        '--button-bg': 'rgba(168, 189, 248, 0.15)',
         '--button-hover': 'rgba(56, 189, 248, 0.3)',
         '--button-text': '#ffffff',
         '--highlight-color': '#00ffcc',
@@ -466,23 +466,19 @@
     function applyTheme(themeName) {
       const t = themes[themeName];
       if (!t) return;
-      
       const root = document.documentElement;
       Object.keys(t).forEach(key => {
         root.style.setProperty(key, t[key]);
       });
     }
 
-    // Initialize Default
     applyTheme('light');
-
-    // Event Listener
     themeSelect.addEventListener('change', (e) => {
       applyTheme(e.target.value);
     });
 
     /* ------------------------------------------------------------------
-       CORE VIEWER LOGIC (Three.js + BOM)
+       CORE VIEWER LOGIC
        ------------------------------------------------------------------ */
     const info = document.getElementById('info');
     const fileInput = document.getElementById('fileInput');
@@ -528,9 +524,7 @@
 
     function init() {
       info.textContent = 'Ready. Load GLB file.';
-
       scene = new THREE.Scene();
-      // Important: Scene background is null so CSS gradient shows through
       scene.background = null;
 
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
@@ -545,7 +539,6 @@
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
 
-      // Lighting
       const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2); 
       hemi.position.set(0, 50, 0);
       scene.add(hemi);
@@ -578,7 +571,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // --- UTILS ---
     function normalizeKey(str) {
       if (!str) return '';
       let s = String(str).trim();
@@ -586,175 +578,204 @@
       return s.toUpperCase();
     }
 
-    // --- BOM PARSING ---
+    // --- BOM PARSING LOGIC (EXCEL & CSV ONLY) ---
+    
+    // 1. CSV PARSER
     function parseBomCsv(text) {
       bomData = {};
       const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
       if (lines.length < 2) return;
-      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
       
-      const idxPart = header.findIndex(h => h.includes('part') && (h.includes('no') || h.includes('number')));
-      const idxTitle = header.findIndex(h => h.includes('title') || h === 'item');
-      const idxDesc = header.findIndex(h => h.includes('descr'));
-      const idxAuthor = header.findIndex(h => h.includes('author'));
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      // Find Part Number Column
+      const idxPart = headers.findIndex(h => {
+        const lower = h.toLowerCase();
+        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
+      });
+
+      if (idxPart === -1) {
+        console.warn("Could not find 'Part Number' column in CSV");
+        info.textContent = 'Error: No "Part Number" column found in CSV.';
+        return;
+      }
 
       for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(',');
-        if (idxPart < 0 || idxPart >= row.length) continue;
-        const partNumber = row[idxPart].trim();
-        if (!partNumber) continue;
-
-        bomData[normalizeKey(partNumber)] = {
-          partNumber,
-          title: (idxTitle >= 0 && row[idxTitle]) ? row[idxTitle].trim() : '',
-          description: (idxDesc >= 0 && row[idxDesc]) ? row[idxDesc].trim() : '',
-          author: (idxAuthor >= 0 && row[idxAuthor]) ? row[idxAuthor].trim() : ''
-        };
+        // Handle commas within quotes
+        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        if (!row[idxPart]) continue;
+        const partNumber = row[idxPart].replace(/^"|"$/g, '').trim();
+        const key = normalizeKey(partNumber);
+        
+        bomData[key] = {};
+        headers.forEach((header, index) => {
+          if (row[index]) {
+            let val = row[index].replace(/^"|"$/g, '').trim();
+            if (val) bomData[key][header] = val;
+          }
+        });
       }
     }
 
-    function parseBomXml(text) {
+    // 2. EXCEL (XLSX) PARSER
+    function parseBomExcel(arrayBuffer) {
       bomData = {};
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(text, "application/xml");
-      if (xml.getElementsByTagName("parsererror").length > 0) return;
+      if (typeof XLSX === 'undefined') {
+         info.textContent = 'Excel library not loaded.';
+         return;
+      }
 
-      const getVal = (el, tags) => {
-        for (const t of tags) {
-          const found = el.getElementsByTagName(t)[0];
-          if (found) return found.textContent.trim();
-          // Also check generic properties
-          const props = Array.from(el.getElementsByTagName('Property'));
-          for (const p of props) {
-            if (p.getAttribute('Name') === t) {
-               const v = p.getElementsByTagName('Value')[0];
-               if (v) return v.textContent.trim();
-            }
-          }
-        }
-        return '';
-      };
-
-      // Try to find rows
-      let rows = [...xml.getElementsByTagName('Row'), ...xml.getElementsByTagName('Item'), ...xml.getElementsByTagName('Component')];
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      // Assume first sheet
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
       
-      rows.forEach(row => {
-        const pn = getVal(row, ['PartNumber','Part_Number','PartNo','Part']);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+      if (jsonData.length === 0) return;
+
+      const keys = Object.keys(jsonData[0]);
+      const partKey = keys.find(k => {
+        const lower = k.toLowerCase();
+        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
+      });
+
+      if (!partKey) {
+        info.textContent = 'Error: No "Part Number" column found in XLSX.';
+        return;
+      }
+
+      jsonData.forEach(row => {
+        const pn = row[partKey];
         if (pn) {
-          bomData[normalizeKey(pn)] = {
-            partNumber: pn,
-            title: getVal(row, ['Title']),
-            description: getVal(row, ['Description','DESCRIP']),
-            author: getVal(row, ['Author'])
-          };
+          const key = normalizeKey(String(pn));
+          const cleanRow = {};
+          Object.keys(row).forEach(k => {
+            cleanRow[k] = String(row[k]);
+          });
+          bomData[key] = cleanRow;
         }
       });
     }
 
+    // Handles the file selection event
     function onBomSelected(e) {
       const file = e.target.files[0];
       if (!file) return;
       info.textContent = 'Loading BOM...';
       const reader = new FileReader();
+      
+      const isExcel = file.name.match(/\.(xlsx|xls)$/i);
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+
+      if (!isExcel && !isCsv) {
+        info.textContent = 'Error: Only CSV or Excel files allowed.';
+        return;
+      }
+      
       reader.onload = (ev) => {
-        if (file.name.toLowerCase().endsWith('.csv')) parseBomCsv(ev.target.result);
-        else if (file.name.toLowerCase().endsWith('.xml')) parseBomXml(ev.target.result);
-        info.textContent = `BOM Loaded (${Object.keys(bomData).length} rows).`;
+        const data = ev.target.result;
+        
+        if (isExcel) {
+          parseBomExcel(data);
+        } else if (isCsv) {
+          parseBomCsv(data);
+        }
+        
+        info.textContent = `BOM Loaded (${Object.keys(bomData).length} parts).`;
       };
-      reader.readAsText(file);
+
+      if (isExcel) {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
     }
 
-    // --- METADATA extraction ---
+    // --- METADATA MERGING ---
     function extractAllMetadata(obj) {
       const md = { 
-        name: 'Unknown', type: obj.isMesh ? 'Part' : 'Assembly',
-        partNumber: null, description: null, material: null,
-        geometry: {}, custom: {}
+        name: 'Unknown', 
+        type: obj.isMesh ? 'Part' : 'Assembly',
+        partNumber: null,
+        geometry: {}, 
+        bomProps: {}
       };
 
-      // Traverse up for meaningful name/props
       let curr = obj;
       while(curr) {
         if (curr.name && !curr.name.match(/Scene|Solid|Mesh/i)) md.name = curr.name;
-        if (curr.userData) {
-          if (curr.userData.partNumber) md.partNumber = curr.userData.partNumber;
-          if (curr.userData.description) md.description = curr.userData.description;
-          if (curr.userData.material) md.material = curr.userData.material;
-          // Collect others
-          Object.keys(curr.userData).forEach(k => {
-             if (!['partNumber','description','material','name'].includes(k)) md.custom[k] = curr.userData[k];
-          });
-        }
+        if (curr.userData && curr.userData.partNumber) md.partNumber = curr.userData.partNumber;
         curr = curr.parent;
       }
       
-      // Link BOM
       if (!md.partNumber) md.partNumber = md.name;
+      
       const key = normalizeKey(md.partNumber);
-      if (bomData[key]) {
-        Object.assign(md, bomData[key]);
-      } else if (md.partNumber.includes(':')) {
-        // Try stripping standard inventor suffixes
+      let foundData = bomData[key];
+
+      if (!foundData && md.partNumber.includes(':')) {
         const base = normalizeKey(md.partNumber.split(':')[0]);
-        if (bomData[base]) Object.assign(md, bomData[base]);
+        foundData = bomData[base];
       }
 
-      // Geo stats
+      if (foundData) {
+        md.bomProps = foundData;
+        const keys = Object.keys(foundData);
+        const pnKey = keys.find(k => k.match(/Part.*Num/i));
+        if (pnKey) md.partNumber = foundData[pnKey];
+      }
+
       if (obj.isMesh && obj.geometry) {
          if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
          const size = new THREE.Vector3();
          obj.geometry.boundingBox.getSize(size);
          md.geometry.dims = `${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)}`;
-         if (obj.geometry.attributes.position) md.geometry.verts = obj.geometry.attributes.position.count;
       }
-      
       return md;
     }
 
     function displayMetadata(md) {
       let html = '<div class="metadata-grid">';
-      
-      const add = (l, v) => { if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; };
+      const add = (l, v) => { 
+        if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; 
+      };
       
       add('Type', md.type);
       add('Part Number', md.partNumber);
-      add('Title', md.title);
-      add('Description', md.description);
-      add('Material', md.material);
-      
       html += '</div>';
+
+      if (Object.keys(md.bomProps).length > 0) {
+         html += `<div class="metadata-section"><div class="metadata-section-title">BOM Data</div><div class="metadata-grid">`;
+         Object.keys(md.bomProps).forEach(key => {
+           if (key.toLowerCase().includes('part number') || key.toLowerCase().includes('part no')) return;
+           add(key, md.bomProps[key]);
+         });
+         html += `</div></div>`;
+      } else {
+         html += `<div style="margin-top:10px; font-size:10px; color:var(--text-muted)">No BOM data linked</div>`;
+      }
 
       if (md.geometry.dims) {
         html += `<div class="metadata-section"><div class="metadata-section-title">Geometry</div><div class="metadata-grid">`;
         add('Dimensions', md.geometry.dims);
-        add('Vertices', md.geometry.verts);
         html += `</div></div>`;
       }
-
-      if (Object.keys(md.custom).length > 0) {
-        html += `<div class="metadata-section"><div class="metadata-section-title">Properties</div><div class="metadata-grid">`;
-        Object.keys(md.custom).forEach(k => add(k, typeof md.custom[k]==='object'?JSON.stringify(md.custom[k]):md.custom[k]));
-        html += `</div></div>`;
-      }
-      
       partDetails.innerHTML = html;
     }
 
-    // --- TREE VIEW ---
+    // --- TREE BUILDER ---
     function buildTreeNode(obj, parentEl) {
       if (!obj.name || obj.name.match(/Scene/i)) {
         obj.children.forEach(c => buildTreeNode(c, parentEl));
         return;
       }
-
       const node = document.createElement('div');
       node.className = 'tree-node';
-      
       const item = document.createElement('div');
       const hasKids = obj.children && obj.children.some(c => c.name);
       item.className = `tree-item ${hasKids?'assembly':'part'}`;
       
-      // Icon logic
       const toggle = document.createElement('span');
       toggle.className = `tree-toggle ${hasKids?'':'empty'}`;
       toggle.textContent = hasKids ? '▶' : '';
@@ -771,24 +792,19 @@
         kidsContainer.className = 'tree-children';
         obj.children.forEach(c => buildTreeNode(c, kidsContainer));
         node.append(kidsContainer);
-        
         toggle.onclick = (e) => {
           e.stopPropagation();
           kidsContainer.classList.toggle('expanded');
           toggle.textContent = kidsContainer.classList.contains('expanded') ? '▼' : '▶';
         };
       }
-
-      // Selection logic
       if (obj.isMesh || hasKids) {
         item.onclick = (e) => {
           if (e.target === toggle) return;
           selectObject(obj);
         };
-        // Map mesh to this UI node for auto-scroll
         if (obj.isMesh) objectToNodeMap.set(obj, item);
       }
-      
       parentEl.appendChild(node);
     }
 
@@ -801,9 +817,8 @@
       document.querySelectorAll('.tree-toggle').forEach(t => { if(t.textContent === '▼') t.textContent = '▶'; });
     }
 
-    // --- SELECTION & HIGHLIGHTING ---
+    // --- INTERACTION ---
     function selectObject(obj) {
-      // Find actual mesh if group selected
       let mesh = obj.isMesh ? obj : null;
       if (!mesh) obj.traverse(c => { if(c.isMesh && !mesh) mesh = c; });
       
@@ -813,7 +828,6 @@
         partValue.textContent = md.partNumber || md.name;
         displayMetadata(md);
         
-        // Tree UI update
         document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
         const node = objectToNodeMap.get(mesh);
         if (node) {
@@ -821,7 +835,6 @@
           node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         
-        // Camera focus
         const box = new THREE.Box3().setFromObject(mesh);
         controls.target.copy(box.getCenter(new THREE.Vector3()));
       }
@@ -832,21 +845,16 @@
         selectedObject.material = originalMaterials.get(selectedObject);
       }
       selectedObject = mesh;
-      
-      // Get current highlight color from CSS var
       const highlightHex = getComputedStyle(document.body).getPropertyValue('--highlight-color').trim();
-      
       const mat = mesh.material.clone();
       mat.emissive = new THREE.Color(highlightHex);
       mat.emissiveIntensity = 0.6;
       mesh.material = mat;
     }
 
-    // --- MAIN EVENTS ---
     function onFileSelected(e) {
       const file = e.target.files[0];
       if (!file) return;
-      
       info.textContent = 'Loading GLB...';
       const url = URL.createObjectURL(file);
       const loader = new THREE.GLTFLoader();
@@ -856,24 +864,20 @@
         modelRoot = gltf.scene;
         scene.add(modelRoot);
         
-        // Center model
         const box = new THREE.Box3().setFromObject(modelRoot);
         const center = box.getCenter(new THREE.Vector3());
         modelRoot.position.sub(center);
         
-        // Adjust Camera
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         camera.position.set(maxDim, maxDim, maxDim*1.5);
         camera.lookAt(0,0,0);
         
-        // Save materials
         originalMaterials.clear();
         modelRoot.traverse(c => {
           if (c.isMesh) originalMaterials.set(c, c.material);
         });
 
-        // Rebuild Tree
         treeContent.innerHTML = '';
         objectToNodeMap.clear();
         buildTreeNode(modelRoot, treeContent);
@@ -895,7 +899,6 @@
       if (intersects.length > 0) {
         selectObject(intersects[0].object);
       } else {
-        // Deselect
         if (selectedObject && originalMaterials.has(selectedObject)) {
           selectedObject.material = originalMaterials.get(selectedObject);
           selectedObject = null;
