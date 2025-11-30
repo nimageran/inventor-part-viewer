@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Part Scanner - No Auto-Center</title>
+  <title>Inventor Part Scanner - Smart BOM</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
 
@@ -11,7 +11,7 @@
        THEME VARIABLES
        ------------------------------------------------------------------ */
     :root {
-      /* Default to LIGHT THEME variables initially */
+      /* Default to LIGHT THEME */
       --bg-gradient: radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%);
       --grid-color: rgba(0, 0, 0, 0.05);
       --text-main: #1e293b;
@@ -270,7 +270,7 @@
       z-index: 9;
       min-width: 400px;
       max-width: 80vw;
-      max-height: 40vh; /* Increased height for more data */
+      max-height: 40vh;
       padding: 16px 20px;
       border-radius: 12px;
       background: var(--panel-bg);
@@ -360,7 +360,6 @@
     <label class="file-label">
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
-    <!-- RESTRICTED TO CSV and EXCEL ONLY -->
     <label class="file-label">
       <input type="file" id="bomInput" accept=".csv,.xlsx,.xls" />
     </label>
@@ -395,7 +394,7 @@
 
   <!-- Three.js Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <!-- SheetJS Library for reading Excel files -->
+  <!-- SheetJS Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <script>
@@ -582,32 +581,39 @@
       return s.toUpperCase();
     }
 
-    // --- BOM PARSING LOGIC (STRICT COLUMN 2) ---
+    // --- SMART PARSING LOGIC ---
     
-    // 1. CSV PARSER (Strictly use Column 2 as Key)
+    // 1. CSV PARSER (Smart Header Detection)
     function parseBomCsv(text) {
       bomData = {};
       const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
       if (lines.length < 2) return;
       
-      // Get all headers from the first row
-      const headersLine = lines[0];
-      const headers = headersLine.split(',').map(h => h.trim());
+      // Parse Header
+      // Remove BOM (Byte Order Mark) if present and clean quotes
+      const headerLine = lines[0].replace(/^\uFEFF/, ''); 
+      const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
       
-      // We assume Column 2 (Index 1) is Part Number based on your file
-      if (headers.length < 2) {
-         info.textContent = 'Error: CSV must have at least 2 columns.';
-         return;
+      // Find the Index of "Part Number"
+      const idxPart = headers.findIndex(h => {
+        const lower = h.toLowerCase();
+        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
+      });
+
+      if (idxPart === -1) {
+        console.warn("Could not find 'Part Number' column in CSV");
+        info.textContent = 'Error: No "Part Number" header found.';
+        return;
       }
 
       for (let i = 1; i < lines.length; i++) {
         // Regex split to handle commas inside quotes
         const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         
-        // Grab Column 2 (Index 1) - The Part Number
-        if (!row[1]) continue; 
+        // Grab the detected Part Number column
+        if (!row[idxPart]) continue;
         
-        const partNumber = row[1].replace(/^"|"$/g, '').trim();
+        const partNumber = row[idxPart].replace(/^"|"$/g, '').trim();
         const key = normalizeKey(partNumber);
         
         bomData[key] = {};
@@ -622,7 +628,7 @@
       }
     }
 
-    // 2. EXCEL (XLSX) PARSER (Strictly use Column 2 as Key)
+    // 2. EXCEL (XLSX) PARSER (Smart Header Detection)
     function parseBomExcel(arrayBuffer) {
       bomData = {};
       if (typeof XLSX === 'undefined') {
@@ -634,32 +640,36 @@
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      // Convert sheet to "Array of Arrays" (Header is row 0)
-      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+      // Convert to JSON (Array of Objects) using SheetJS default
+      // This uses the first row as keys automatically
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-      if (rows.length < 2) return;
+      if (jsonData.length === 0) return;
 
-      const headers = rows[0]; // First row is headers
+      // Detect the Part Number Key
+      const keys = Object.keys(jsonData[0]);
+      const partKey = keys.find(k => {
+        const lower = k.toLowerCase();
+        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
+      });
 
-      // Start from index 1 (skip headers)
-      for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        
-        // Grab Column 2 (Index 1) - The Part Number
-        if (!row[1]) continue;
-
-        const partNumber = String(row[1]).trim();
-        const key = normalizeKey(partNumber);
-        
-        bomData[key] = {};
-        
-        // Map all columns
-        headers.forEach((h, colIndex) => {
-           if (row[colIndex] !== undefined) {
-             bomData[key][h] = String(row[colIndex]);
-           }
-        });
+      if (!partKey) {
+        info.textContent = 'Error: No "Part Number" column found in XLSX.';
+        return;
       }
+
+      jsonData.forEach(row => {
+        const pn = row[partKey];
+        if (pn) {
+          const key = normalizeKey(String(pn));
+          // Copy all props, converting to string
+          const cleanRow = {};
+          Object.keys(row).forEach(k => {
+            cleanRow[k] = String(row[k]);
+          });
+          bomData[key] = cleanRow;
+        }
+      });
     }
 
     // Handles the file selection event
@@ -743,15 +753,14 @@
         if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; 
       };
       
-      // 1. BOM DATA (Show everything found in Excel/CSV)
+      // 1. BOM DATA
       if (Object.keys(md.bomProps).length > 0) {
          Object.keys(md.bomProps).forEach(key => {
-           // We can hide the raw 'Part Number' if desired, but here we show everything
            add(key, md.bomProps[key]);
          });
       } else {
          add('Type', md.type);
-         html += `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">No BOM data found. Check Column 2 of your file.</div>`;
+         html += `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">No BOM data found for this part.</div>`;
       }
       
       html += '</div>';
@@ -836,10 +845,6 @@
           node.classList.add('selected');
           node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-        
-        // REMOVED AUTO-CENTERING
-        // const box = new THREE.Box3().setFromObject(mesh);
-        // controls.target.copy(box.getCenter(new THREE.Vector3()));
       }
     }
 
