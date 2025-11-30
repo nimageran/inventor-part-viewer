@@ -3,34 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Part Scanner - Smart BOM</title>
+  <title>Inventor Part Scanner - SciFi HUD</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Rajdhani:wght@400;600&display=swap');
 
     /* ------------------------------------------------------------------
        THEME VARIABLES
        ------------------------------------------------------------------ */
     :root {
-      /* Default to LIGHT THEME */
-      --bg-gradient: radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%);
-      --grid-color: rgba(0, 0, 0, 0.05);
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --text-accent: #0284c7;
+      /* Base Theme Colors */
+      --bg-gradient: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
       
-      --panel-bg: rgba(255, 255, 255, 0.90);
-      --panel-border: rgba(148, 163, 184, 0.4);
-      --panel-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      /* HUD Colors */
+      --hud-bg: rgba(5, 10, 20, 0.85);
+      --hud-border: rgba(0, 255, 213, 0.6);
+      --hud-glow: rgba(0, 255, 213, 0.3);
+      --hud-text-main: #e0f2fe;
+      --hud-text-accent: #00ffd5;
       
-      --brand-font: "Orbitron", sans-serif;
-      --body-font: "Inter", sans-serif;
+      --panel-bg: rgba(20, 25, 40, 0.6);
+      --panel-border: rgba(100, 116, 139, 0.3);
       
-      --button-bg: #e2e8f0;
-      --button-hover: #cbd5e1;
-      --button-text: #0f172a;
-      
-      --highlight-color: #0ea5e9;
-      --selected-bg: rgba(14, 165, 233, 0.15);
+      --font-tech: "Orbitron", sans-serif;
+      --font-data: "Rajdhani", sans-serif;
     }
 
     html, body {
@@ -39,23 +34,20 @@
       overflow: hidden;
       height: 100%;
       background: var(--bg-gradient);
-      color: var(--text-main);
-      font-family: var(--body-font);
-      transition: background 0.5s ease, color 0.5s ease;
+      color: var(--hud-text-main);
+      font-family: var(--font-data);
     }
 
+    /* Grid Background */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
       pointer-events: none;
-      background: repeating-linear-gradient(
-        to bottom,
-        var(--grid-color),
-        var(--grid-color) 1px,
-        transparent 1px,
-        transparent 20px
-      );
+      background: 
+        linear-gradient(rgba(0, 255, 213, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 213, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
       z-index: 0;
     }
 
@@ -63,855 +55,487 @@
     #top-bar {
       position: fixed;
       left: 50%;
-      top: 18px;
+      top: 20px;
       transform: translateX(-50%);
       z-index: 10;
       display: flex;
-      gap: 10px;
+      gap: 15px;
       align-items: center;
       background: var(--panel-bg);
-      border-radius: 999px;
-      padding: 8px 18px;
       border: 1px solid var(--panel-border);
-      box-shadow: var(--panel-shadow);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      font-size: 12px;
-      transition: all 0.3s ease;
+      border-radius: 4px;
+      padding: 8px 20px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
 
     #brand {
+      font-family: var(--font-tech);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--hud-text-accent);
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px var(--hud-glow);
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-family: var(--brand-font);
-      font-size: 12px;
-      letter-spacing: 0.05em;
-      font-weight: 600;
-      color: var(--text-accent);
-      padding-right: 12px;
-      border-right: 1px solid var(--panel-border);
+      gap: 8px;
     }
 
-    #brand-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--highlight-color);
-      box-shadow: 0 0 8px var(--highlight-color);
-      animation: pulse 2s ease-in-out infinite;
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.9); }
-    }
-
-    .file-label, select {
-      font-size: 11px;
-      color: var(--text-main);
-      display: flex;
-      align-items: center;
-      gap: 4px;
+    input[type="file"] {
+      font-size: 100px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
       cursor: pointer;
     }
 
-    #themeSelect {
-      background: var(--button-bg);
-      color: var(--button-text);
-      border: 1px solid var(--panel-border);
-      border-radius: 6px;
-      padding: 4px 8px;
-      outline: none;
-      font-family: var(--body-font);
-      font-size: 11px;
-    }
-
-    #fileInput, #bomInput {
-      font-size: 11px;
-      color: var(--text-muted);
-      width: 180px; 
-    }
-    
-    #fileInput::-webkit-file-upload-button,
-    #bomInput::-webkit-file-upload-button {
+    .btn-hud {
+      background: rgba(0, 255, 213, 0.1);
+      border: 1px solid var(--hud-border);
+      color: var(--hud-text-accent);
+      padding: 5px 12px;
+      font-family: var(--font-tech);
       font-size: 10px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: none;
-      margin-right: 6px;
-      background: var(--highlight-color);
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
       text-transform: uppercase;
-      transition: filter 0.2s;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 0 5px var(--hud-glow);
     }
-    #fileInput::-webkit-file-upload-button:hover,
-    #bomInput::-webkit-file-upload-button:hover {
-      filter: brightness(1.1);
+    .btn-hud:hover {
+      background: rgba(0, 255, 213, 0.2);
+      box-shadow: 0 0 15px var(--hud-glow);
     }
 
     #info {
-      margin-left: 8px;
-      color: var(--text-accent);
-      white-space: nowrap;
-      max-width: 30vw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 11px;
+      font-size: 12px;
+      color: var(--hud-text-main);
       font-weight: 600;
+      min-width: 150px;
+      text-align: right;
     }
 
     /* --- LEFT TREE PANEL --- */
     #tree-panel {
       position: fixed;
-      left: 18px;
+      left: 20px;
       top: 80px;
-      bottom: 80px;
-      width: 300px;
-      background: var(--panel-bg);
-      border-radius: 12px;
-      border: 1px solid var(--panel-border);
-      box-shadow: var(--panel-shadow);
-      backdrop-filter: blur(12px);
+      bottom: 20px;
+      width: 280px;
+      background: rgba(10, 15, 25, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-left: 2px solid var(--hud-text-accent);
+      backdrop-filter: blur(10px);
       z-index: 9;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      transition: all 0.3s ease;
     }
-
+    
     #tree-header {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--panel-border);
-      font-family: var(--brand-font);
-      font-size: 10px;
-      text-transform: uppercase;
-      color: var(--text-accent);
+      padding: 12px;
+      background: rgba(0, 255, 213, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: var(--font-tech);
+      font-size: 11px;
+      color: var(--hud-text-accent);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-weight: 600;
-    }
-
-    .header-controls button {
-      font-size: 9px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--panel-border);
-      background: var(--button-bg);
-      color: var(--button-text);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .header-controls button:hover {
-      background: var(--button-hover);
     }
 
     #tree-content {
       flex: 1;
       overflow-y: auto;
-      padding: 8px;
+      padding: 10px;
+      font-family: var(--font-data);
     }
-    #tree-content::-webkit-scrollbar { width: 5px; }
-    #tree-content::-webkit-scrollbar-track { background: transparent; }
-    #tree-content::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
+    /* Scrollbar */
+    #tree-content::-webkit-scrollbar { width: 6px; }
+    #tree-content::-webkit-scrollbar-track { background: #0f0f1a; }
+    #tree-content::-webkit-scrollbar-thumb { background: #334; }
 
-    .tree-node { margin: 1px 0; }
-    
     .tree-item {
-      display: flex;
-      align-items: center;
       padding: 4px 6px;
-      border-radius: 4px;
-      font-size: 11px;
-      color: var(--text-main);
       cursor: pointer;
+      font-size: 14px;
+      color: #aaa;
       border: 1px solid transparent;
-      user-select: none;
+      margin-bottom: 2px;
     }
-
-    .tree-item:hover { background: var(--button-bg); }
-
+    .tree-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
     .tree-item.selected {
-      background: var(--selected-bg);
-      border-color: var(--highlight-color);
-      color: var(--text-main);
+      background: rgba(0, 255, 213, 0.15);
+      border: 1px solid var(--hud-border);
+      color: var(--hud-text-accent);
+      box-shadow: inset 0 0 10px rgba(0, 255, 213, 0.1);
     }
-
-    .tree-item.assembly { font-weight: 600; }
-    .tree-item.part { color: var(--text-muted); }
-    .tree-item.selected.part { color: var(--text-main); }
-
-    .tree-toggle {
-      width: 14px; height: 14px;
-      display: flex; align-items: center; justify-content: center;
-      margin-right: 4px; font-size: 8px; color: var(--text-accent);
-    }
-    .tree-toggle.empty { opacity: 0; }
-    .tree-icon { margin-right: 6px; font-size: 10px; }
-    .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    
-    .tree-children {
-      margin-left: 14px;
-      display: none;
-      border-left: 1px solid var(--panel-border);
-      padding-left: 4px;
-    }
+    .tree-toggle { width: 14px; display: inline-block; color: var(--hud-text-accent); font-size: 10px; }
+    .tree-children { margin-left: 12px; display: none; border-left: 1px dashed #334; }
     .tree-children.expanded { display: block; }
 
-    /* --- BOTTOM DETAILS PANEL --- */
+
+    /* --- FUTURISTIC HUD PANEL (Part Display) --- */
     #part-display {
       position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9;
-      min-width: 400px;
-      max-width: 80vw;
-      max-height: 40vh;
-      padding: 16px 20px;
-      border-radius: 12px;
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      box-shadow: var(--panel-shadow);
-      backdrop-filter: blur(12px);
+      bottom: 30px;
+      right: 30px; /* Moved to right for better HUD feel */
+      width: 350px;
+      min-height: 200px;
+      z-index: 20;
+      
+      background: var(--hud-bg);
+      border: 1px solid var(--hud-border);
+      box-shadow: 0 0 20px var(--hud-glow), inset 0 0 20px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      overflow-y: auto;
-      transition: all 0.3s ease;
+      gap: 10px;
+      
+      /* Clip path for sci-fi shape */
+      clip-path: polygon(
+        0 0, 
+        100% 0, 
+        100% 85%, 
+        92% 100%, 
+        0 100%
+      );
     }
 
-    #part-label {
-      font-family: var(--brand-font);
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-muted);
+    /* HUD Corner Accents */
+    #part-display::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      border-top: 2px solid var(--hud-text-accent);
+      border-left: 2px solid var(--hud-text-accent);
+      width: 20px; height: 20px;
+    }
+    #part-display::after {
+      content: "";
+      position: absolute;
+      bottom: 0; right: 0;
+      pointer-events: none;
+      border-bottom: 2px solid var(--hud-text-accent);
+      border-right: 2px solid var(--hud-text-accent);
+      width: 30px; height: 30px; /* larger corner on cut side */
     }
 
-    #part-value {
-      font-family: var(--brand-font);
-      font-size: 16px;
-      color: var(--text-accent);
-      font-weight: 600;
-      border-bottom: 1px solid var(--panel-border);
+    /* Scanline Animation */
+    .scan-line {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 5px;
+      background: rgba(0, 255, 213, 0.5);
+      opacity: 0.3;
+      animation: scan 4s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes scan {
+      0% { top: -10%; opacity: 0; }
+      10% { opacity: 0.5; }
+      90% { opacity: 0.5; }
+      100% { top: 110%; opacity: 0; }
+    }
+
+    /* HUD Header */
+    #part-header {
+      border-bottom: 1px solid var(--hud-border);
       padding-bottom: 8px;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
+    }
+    
+    #part-label {
+      font-family: var(--font-tech);
+      font-size: 10px;
+      color: var(--hud-text-accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+    
+    #part-value {
+      font-family: var(--font-tech);
+      font-size: 18px;
+      color: #fff;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px var(--hud-glow);
+      margin-top: 4px;
+      word-break: break-all;
     }
 
-    .metadata-grid {
+    /* Data Grid */
+    .hud-grid {
       display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 4px 12px;
-      font-size: 11px;
+      grid-template-columns: 1fr;
+      gap: 8px;
     }
-    .metadata-label { color: var(--text-muted); font-weight: 500; min-width: 80px; }
-    .metadata-value { color: var(--text-main); word-break: break-word; font-weight: 600; }
-    
-    .metadata-section {
-      margin-top: 12px;
-      padding-top: 6px;
-      border-top: 1px dashed var(--panel-border);
+
+    .hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid rgba(0, 255, 213, 0.1);
+      padding-bottom: 4px;
     }
-    .metadata-section-title {
-      font-size: 9px;
+
+    .hud-key {
+      font-family: var(--font-tech);
+      font-size: 10px;
+      color: var(--hud-text-accent);
       text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      font-family: var(--brand-font);
-      opacity: 0.7;
+      letter-spacing: 1px;
+    }
+
+    .hud-val {
+      font-family: var(--font-data);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      text-align: right;
     }
 
     #hint {
-      position: fixed; right: 18px; bottom: 18px;
-      font-size: 10px; opacity: 0.5; color: var(--text-muted);
-      z-index: 8; text-align: right; pointer-events: none;
-    }
-    #hint span { color: var(--text-accent); font-weight: 600;}
-
-    canvas { display: block; position: relative; z-index: 1; outline: none; }
-
-    @media (max-width: 768px) {
-      #top-bar { max-width: 90vw; flex-wrap: wrap; justify-content: center; top: 10px; }
-      #tree-panel { top: 120px; width: 220px; left: 10px; bottom: 10px; }
-      #part-display { bottom: 10px; min-width: 280px; }
-      #info { display: none; }
+      position: fixed; bottom: 20px; left: 20px;
+      font-family: var(--font-tech);
+      font-size: 10px; color: rgba(255,255,255,0.4);
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
   <div id="top-bar">
-    <div id="brand">
-      <div id="brand-dot"></div>
-      <span>PART&nbsp;SCAN</span>
-    </div>
-
-    <select id="themeSelect">
-      <option value="light">Light (Default)</option>
-      <option value="dark">Dark Mode</option>
-      <option value="neonPurple">Neon Purple</option>
-      <option value="neonBlue">Neon Blue</option>
-    </select>
-
-    <label class="file-label">
+    <div id="brand">PART // SCANNER</div>
+    
+    <label class="btn-hud file-input-wrapper">
+      LOAD GLB
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
-    <label class="file-label">
+    
+    <label class="btn-hud file-input-wrapper">
+      LOAD CSV BOM
       <input type="file" id="bomInput" accept=".csv,.xlsx,.xls" />
     </label>
-    <span id="info">Loading viewer...</span>
+    
+    <div id="info">SYSTEM READY</div>
   </div>
 
   <div id="tree-panel">
     <div id="tree-header">
-      <span>Assembly Tree</span>
-      <div class="header-controls">
-        <button id="expand-all">EXPAND</button>
-        <button id="collapse-all">COLLAPSE</button>
+      <span>ASSEMBLY HIERARCHY</span>
+      <div style="display:flex; gap:5px;">
+        <button id="expand-all" class="btn-hud" style="font-size:9px; padding:2px 6px;">+</button>
+        <button id="collapse-all" class="btn-hud" style="font-size:9px; padding:2px 6px;">-</button>
       </div>
     </div>
     <div id="tree-content">
-      <div style="padding: 20px; text-align: center; font-size: 11px; color: var(--text-muted);">
-        Load a GLB/GLTF model
-      </div>
+      <div style="padding:20px; text-align:center; opacity:0.5;">NO DATA STREAM</div>
     </div>
   </div>
 
   <div id="part-display">
-    <div id="part-label">SELECTED PART</div>
-    <div id="part-value">—</div>
-    <div id="part-details"></div>
+    <div class="scan-line"></div>
+    <div id="part-header">
+      <div id="part-label">TARGET IDENTIFIED</div>
+      <div id="part-value">--</div>
+    </div>
+    <div id="part-details">
+      <div style="font-size:12px; color:rgba(255,255,255,0.3); font-style:italic;">AWAITING SELECTION...</div>
+    </div>
   </div>
 
   <div id="hint">
-    <div>Rotate: <span>Left Drag</span> • Pan: <span>Right/Middle</span></div>
-    <div>Zoom: <span>Scroll</span> • Select: <span>Click</span></div>
+    ORBIT: LEFT CLICK // PAN: RIGHT CLICK // ZOOM: SCROLL
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <script>
-    /* ------------------------------------------------------------------
-       THEME MANAGEMENT
-       ------------------------------------------------------------------ */
-    const themes = {
-      light: {
-        '--bg-gradient': 'radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%)',
-        '--grid-color': 'rgba(0, 0, 0, 0.05)',
-        '--text-main': '#1e293b',
-        '--text-muted': '#64748b',
-        '--text-accent': '#0284c7',
-        '--panel-bg': 'rgba(255, 255, 255, 0.9)',
-        '--panel-border': 'rgba(148, 163, 184, 0.4)',
-        '--panel-shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        '--button-bg': '#f1f5f9',
-        '--button-hover': '#e2e8f0',
-        '--button-text': '#0f172a',
-        '--highlight-color': '#0ea5e9',
-        '--selected-bg': 'rgba(14, 165, 233, 0.15)'
-      },
-      dark: {
-        '--bg-gradient': 'radial-gradient(circle at top, #1e293b 0, #0f172a 100%)',
-        '--grid-color': 'rgba(255, 255, 255, 0.03)',
-        '--text-main': '#f1f5f9',
-        '--text-muted': '#94a3b8',
-        '--text-accent': '#38bdf8',
-        '--panel-bg': 'rgba(30, 41, 59, 0.85)',
-        '--panel-border': 'rgba(56, 189, 248, 0.2)',
-        '--panel-shadow': '0 0 15px rgba(0,0,0,0.5)',
-        '--button-bg': '#334155',
-        '--button-hover': '#475569',
-        '--button-text': '#f8fafc',
-        '--highlight-color': '#38bdf8',
-        '--selected-bg': 'rgba(56, 189, 248, 0.15)'
-      },
-      neonPurple: {
-        '--bg-gradient': 'radial-gradient(circle at top, #2e1065 0, #020207 100%)',
-        '--grid-color': 'rgba(216, 180, 254, 0.05)',
-        '--text-main': '#f3e8ff',
-        '--text-muted': '#a855f7',
-        '--text-accent': '#d8b4fe',
-        '--panel-bg': 'rgba(20, 10, 40, 0.85)',
-        '--panel-border': 'rgba(192, 132, 252, 0.4)',
-        '--panel-shadow': '0 0 20px rgba(168, 85, 247, 0.2)',
-        '--button-bg': 'rgba(168, 85, 247, 0.2)',
-        '--button-hover': 'rgba(168, 85, 247, 0.4)',
-        '--button-text': '#ffffff',
-        '--highlight-color': '#d8b4fe',
-        '--selected-bg': 'rgba(216, 180, 254, 0.2)'
-      },
-      neonBlue: {
-        '--bg-gradient': 'radial-gradient(circle at top, #151b3c 0, #020207 100%)',
-        '--grid-color': 'rgba(125, 249, 255, 0.03)',
-        '--text-main': '#e0f2fe',
-        '--text-muted': '#7dd3fc',
-        '--text-accent': '#38bdf8',
-        '--panel-bg': 'rgba(16, 22, 54, 0.9)',
-        '--panel-border': 'rgba(56, 189, 248, 0.3)',
-        '--panel-shadow': '0 0 20px rgba(14, 165, 233, 0.25)',
-        '--button-bg': 'rgba(168, 189, 248, 0.15)',
-        '--button-hover': 'rgba(56, 189, 248, 0.3)',
-        '--button-text': '#ffffff',
-        '--highlight-color': '#00ffcc',
-        '--selected-bg': 'rgba(0, 255, 204, 0.15)'
-      }
-    };
-
-    const themeSelect = document.getElementById('themeSelect');
-    
-    function applyTheme(themeName) {
-      const t = themes[themeName];
-      if (!t) return;
-      const root = document.documentElement;
-      Object.keys(t).forEach(key => {
-        root.style.setProperty(key, t[key]);
-      });
-    }
-
-    applyTheme('light');
-    themeSelect.addEventListener('change', (e) => {
-      applyTheme(e.target.value);
-    });
-
-    /* ------------------------------------------------------------------
-       CORE VIEWER LOGIC
-       ------------------------------------------------------------------ */
-    const info = document.getElementById('info');
-    const fileInput = document.getElementById('fileInput');
-    const bomInput = document.getElementById('bomInput');
-    const partValue = document.getElementById('part-value');
-    const partDetails = document.getElementById('part-details');
-    const treeContent = document.getElementById('tree-content');
-    const expandAllBtn = document.getElementById('expand-all');
-    const collapseAllBtn = document.getElementById('collapse-all');
-
+    // --- VARIABLES ---
     let scene, camera, renderer, controls;
-    let raycaster, mouse;
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
     let modelRoot = null;
     let selectedObject = null;
     let originalMaterials = new Map();
     let objectToNodeMap = new Map();
     let bomData = {};
+    
+    const info = document.getElementById('info');
+    const partValue = document.getElementById('part-value');
+    const partDetails = document.getElementById('part-details');
 
-    function checkThree() {
-      if (typeof THREE === 'undefined') {
-        info.textContent = 'Loading Three.js...';
-        setTimeout(checkThree, 100);
-        return;
-      }
-      loadOrbitControls();
-    }
-
-    function loadOrbitControls() {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-      script.onload = loadGLTFLoader;
-      script.onerror = () => { info.textContent = 'Failed to load OrbitControls'; };
-      document.head.appendChild(script);
-    }
-
-    function loadGLTFLoader() {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-      script.onload = init;
-      script.onerror = () => { info.textContent = 'Failed to load GLTFLoader'; };
-      document.head.appendChild(script);
-    }
-
+    // --- INIT SCENE ---
     function init() {
-      info.textContent = 'Ready. Load GLB file.';
       scene = new THREE.Scene();
-      scene.background = null;
-
+      
+      // Camera
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-      camera.position.set(0, 2, 5);
-
+      camera.position.set(2, 2, 4);
+      
+      // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
-
+      
+      // Controls
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
 
-      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2); 
-      hemi.position.set(0, 50, 0);
-      scene.add(hemi);
+      // Lights
+      const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambient);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(10, 20, 10);
+      scene.add(dirLight);
 
-      const dir1 = new THREE.DirectionalLight(0xffffff, 0.8);
-      dir1.position.set(25, 30, 18);
-      scene.add(dir1);
-
-      const dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
-      dir2.position.set(-20, -10, -15);
-      scene.add(dir2);
-
-      raycaster = new THREE.Raycaster();
-      mouse = new THREE.Vector2();
-
-      window.addEventListener('resize', onWindowResize, false);
-      renderer.domElement.addEventListener('click', onPointerClick, false);
-      fileInput.addEventListener('change', onFileSelected, false);
-      bomInput.addEventListener('change', onBomSelected, false);
-      expandAllBtn.addEventListener('click', expandAll);
-      collapseAllBtn.addEventListener('click', collapseAll);
+      // Events
+      window.addEventListener('resize', onResize);
+      renderer.domElement.addEventListener('click', onClick);
+      document.getElementById('fileInput').addEventListener('change', loadGLB);
+      document.getElementById('bomInput').addEventListener('change', loadBOM);
+      document.getElementById('expand-all').addEventListener('click', () => toggleTree(true));
+      document.getElementById('collapse-all').addEventListener('click', () => toggleTree(false));
 
       animate();
     }
 
-    function onWindowResize() {
-      if (!camera || !renderer) return;
+    function onResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // --- KEY NORMALIZATION (UPDATED FOR INVENTOR) ---
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // --- NORMALIZATION ---
     function normalizeKey(str) {
       if (!str) return '';
       let s = String(str).trim();
-      // Remove file extensions often found in Inventor names (e.g. .ipt, .iam)
       s = s.replace(/\.(ipt|iam|glb|gltf|obj)$/i, '');
-      // Remove instance tags (e.g. :1, :2)
       if (s.includes(':')) s = s.split(':')[0].trim();
       return s.toUpperCase();
     }
 
-    // --- SMART PARSING LOGIC ---
-    
-    // 1. CSV PARSER (Adapted for your CSV Structure)
-    function parseBomCsv(text) {
-      bomData = {};
-      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-      if (lines.length < 2) return;
-      
-      // Parse Header: Clean BOM and quotes
-      const headerLine = lines[0].replace(/^\uFEFF/, ''); 
-      // Split by comma
-      const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-      
-      // Find "Part Number" column index
-      const idxPart = headers.findIndex(h => {
-        const lower = h.toLowerCase();
-        // Matches "Part Number", "PartNo", "Part Num", etc.
-        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
-      });
-
-      if (idxPart === -1) {
-        info.textContent = 'Error: No "Part Number" header found.';
-        return;
-      }
-
-      for (let i = 1; i < lines.length; i++) {
-        // Safe Split: Regex to split on commas ONLY if they are not inside quotes
-        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        
-        // Ensure row has enough columns
-        if (!row[idxPart]) continue;
-        
-        const partNumber = row[idxPart].replace(/^"|"$/g, '').trim();
-        const key = normalizeKey(partNumber);
-        
-        bomData[key] = {};
-        
-        // Map all columns
-        headers.forEach((header, index) => {
-          if (row[index] !== undefined) {
-            let val = row[index].replace(/^"|"$/g, '').trim();
-            if (val) bomData[key][header] = val;
-          }
-        });
-      }
-    }
-
-    // 2. EXCEL (XLSX) PARSER
-    function parseBomExcel(arrayBuffer) {
-      bomData = {};
-      if (typeof XLSX === 'undefined') {
-         info.textContent = 'Excel library not loaded.';
-         return;
-      }
-
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-      if (jsonData.length === 0) return;
-
-      const keys = Object.keys(jsonData[0]);
-      const partKey = keys.find(k => {
-        const lower = k.toLowerCase();
-        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
-      });
-
-      if (!partKey) {
-        info.textContent = 'Error: No "Part Number" column found in XLSX.';
-        return;
-      }
-
-      jsonData.forEach(row => {
-        const pn = row[partKey];
-        if (pn) {
-          const key = normalizeKey(String(pn));
-          const cleanRow = {};
-          Object.keys(row).forEach(k => {
-            cleanRow[k] = String(row[k]);
-          });
-          bomData[key] = cleanRow;
-        }
-      });
-    }
-
-    function onBomSelected(e) {
+    // --- FILE LOADING ---
+    function loadGLB(e) {
       const file = e.target.files[0];
       if (!file) return;
-      info.textContent = 'Loading BOM...';
-      const reader = new FileReader();
+      info.textContent = "INITIALIZING UPLOAD...";
       
-      const isExcel = file.name.match(/\.(xlsx|xls)$/i);
-      const isCsv = file.name.toLowerCase().endsWith('.csv');
-
-      if (!isExcel && !isCsv) {
-        info.textContent = 'Error: Only CSV or Excel files allowed.';
-        return;
-      }
-      
-      reader.onload = (ev) => {
-        const data = ev.target.result;
-        
-        if (isExcel) {
-          parseBomExcel(data);
-        } else if (isCsv) {
-          parseBomCsv(data);
-        }
-        
-        info.textContent = `BOM Loaded (${Object.keys(bomData).length} parts).`;
-      };
-
-      if (isExcel) {
-        reader.readAsArrayBuffer(file);
-      } else {
-        reader.readAsText(file, 'UTF-8');
-      }
-    }
-
-    // --- METADATA MERGING ---
-    function extractAllMetadata(obj) {
-      const md = { 
-        name: 'Unknown', 
-        type: obj.isMesh ? 'Part' : 'Assembly',
-        partNumber: null,
-        geometry: {}, 
-        bomProps: {}
-      };
-
-      let curr = obj;
-      while(curr) {
-        if (curr.name && !curr.name.match(/Scene|Solid|Mesh/i)) md.name = curr.name;
-        if (curr.userData && curr.userData.partNumber) md.partNumber = curr.userData.partNumber;
-        curr = curr.parent;
-      }
-      
-      if (!md.partNumber) md.partNumber = md.name;
-      
-      const key = normalizeKey(md.partNumber);
-      let foundData = bomData[key];
-
-      // Fallback: If strict key fails, try finding base key from object
-      if (!foundData && md.partNumber.includes(':')) {
-        const base = normalizeKey(md.partNumber.split(':')[0]);
-        foundData = bomData[base];
-      }
-
-      if (foundData) {
-        md.bomProps = foundData;
-      }
-
-      if (obj.isMesh && obj.geometry) {
-         if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
-         const size = new THREE.Vector3();
-         obj.geometry.boundingBox.getSize(size);
-         md.geometry.dims = `${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)}`;
-      }
-      return md;
-    }
-
-    // --- DISPLAY LOGIC ---
-    function displayMetadata(md) {
-      let html = '<div class="metadata-grid">';
-      const add = (l, v) => { 
-        if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; 
-      };
-      
-      // 1. BOM DATA
-      if (Object.keys(md.bomProps).length > 0) {
-         // Define Priority Order for Display
-         const order = ['Description', 'QTY', 'Unit QTY', 'Stock Number', 'REV', 'Material', 'Item'];
-         
-         // Display Preferred Keys First
-         order.forEach(k => {
-            const propKey = Object.keys(md.bomProps).find(pk => pk.toLowerCase() === k.toLowerCase());
-            if (propKey && md.bomProps[propKey]) {
-                add(propKey, md.bomProps[propKey]);
-            }
-         });
-
-         // Display Remaining Keys (skipping the ones we already showed or don't want)
-         Object.keys(md.bomProps).forEach(key => {
-            const isOrdered = order.some(o => o.toLowerCase() === key.toLowerCase());
-            const isIgnored = key.toLowerCase().includes('part number') || key.toLowerCase().includes('thumbnail');
-            if (!isOrdered && !isIgnored) {
-               add(key, md.bomProps[key]);
-            }
-         });
-
-      } else {
-         add('Type', md.type);
-         html += `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">No BOM data found for this part.</div>`;
-      }
-      
-      html += '</div>';
-
-      // 2. GEOMETRY (Pushed to bottom)
-      if (md.geometry.dims) {
-        html += `<div class="metadata-section"><div class="metadata-section-title">Geometric Data</div><div class="metadata-grid">`;
-        add('Dimensions', md.geometry.dims);
-        html += `</div></div>`;
-      }
-      
-      partDetails.innerHTML = html;
-    }
-
-    // --- TREE BUILDER ---
-    function buildTreeNode(obj, parentEl) {
-      if (!obj.name || obj.name.match(/Scene/i)) {
-        obj.children.forEach(c => buildTreeNode(c, parentEl));
-        return;
-      }
-      const node = document.createElement('div');
-      node.className = 'tree-node';
-      const item = document.createElement('div');
-      const hasKids = obj.children && obj.children.some(c => c.name);
-      item.className = `tree-item ${hasKids?'assembly':'part'}`;
-      
-      const toggle = document.createElement('span');
-      toggle.className = `tree-toggle ${hasKids?'':'empty'}`;
-      toggle.textContent = hasKids ? '▶' : '';
-      
-      const label = document.createElement('span');
-      label.className = 'tree-label';
-      label.textContent = obj.name;
-
-      item.append(toggle, label);
-      node.append(item);
-
-      if (hasKids) {
-        const kidsContainer = document.createElement('div');
-        kidsContainer.className = 'tree-children';
-        obj.children.forEach(c => buildTreeNode(c, kidsContainer));
-        node.append(kidsContainer);
-        toggle.onclick = (e) => {
-          e.stopPropagation();
-          kidsContainer.classList.toggle('expanded');
-          toggle.textContent = kidsContainer.classList.contains('expanded') ? '▼' : '▶';
-        };
-      }
-      if (obj.isMesh || hasKids) {
-        item.onclick = (e) => {
-          if (e.target === toggle) return;
-          selectObject(obj);
-        };
-        if (obj.isMesh) objectToNodeMap.set(obj, item);
-      }
-      parentEl.appendChild(node);
-    }
-
-    function expandAll() {
-      document.querySelectorAll('.tree-children').forEach(c => c.classList.add('expanded'));
-      document.querySelectorAll('.tree-toggle').forEach(t => { if(t.textContent === '▶') t.textContent = '▼'; });
-    }
-    function collapseAll() {
-      document.querySelectorAll('.tree-children').forEach(c => c.classList.remove('expanded'));
-      document.querySelectorAll('.tree-toggle').forEach(t => { if(t.textContent === '▼') t.textContent = '▶'; });
-    }
-
-    // --- INTERACTION ---
-    function selectObject(obj) {
-      let mesh = obj.isMesh ? obj : null;
-      if (!mesh) obj.traverse(c => { if(c.isMesh && !mesh) mesh = c; });
-      
-      if (mesh) {
-        highlight(mesh);
-        const md = extractAllMetadata(mesh);
-        partValue.textContent = md.partNumber || md.name;
-        displayMetadata(md);
-        
-        document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
-        const node = objectToNodeMap.get(mesh);
-        if (node) {
-          node.classList.add('selected');
-          node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-      }
-    }
-
-    function highlight(mesh) {
-      if (selectedObject && originalMaterials.has(selectedObject)) {
-        selectedObject.material = originalMaterials.get(selectedObject);
-      }
-      selectedObject = mesh;
-      const highlightHex = getComputedStyle(document.body).getPropertyValue('--highlight-color').trim();
-      const mat = mesh.material.clone();
-      mat.emissive = new THREE.Color(highlightHex);
-      mat.emissiveIntensity = 0.6;
-      mesh.material = mat;
-    }
-
-    function onFileSelected(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      info.textContent = 'Loading GLB...';
-      const url = URL.createObjectURL(file);
       const loader = new THREE.GLTFLoader();
-      
-      loader.load(url, (gltf) => {
+      loader.load(URL.createObjectURL(file), (gltf) => {
         if (modelRoot) scene.remove(modelRoot);
         modelRoot = gltf.scene;
         scene.add(modelRoot);
         
+        // Center model
         const box = new THREE.Box3().setFromObject(modelRoot);
         const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
         modelRoot.position.sub(center);
         
-        const size = box.getSize(new THREE.Vector3());
+        // Adjust Camera
         const maxDim = Math.max(size.x, size.y, size.z);
         camera.position.set(maxDim, maxDim, maxDim*1.5);
         camera.lookAt(0,0,0);
-        
-        originalMaterials.clear();
-        modelRoot.traverse(c => {
-          if (c.isMesh) originalMaterials.set(c, c.material);
-        });
 
-        treeContent.innerHTML = '';
+        // Map Materials & Build Tree
+        originalMaterials.clear();
         objectToNodeMap.clear();
-        buildTreeNode(modelRoot, treeContent);
+        document.getElementById('tree-content').innerHTML = '';
         
-        info.textContent = 'Model Loaded.';
-        partDetails.innerHTML = '<div style="font-size:11px; color:var(--text-muted)">Select a part</div>';
-      }, undefined, (err) => { console.error(err); info.textContent = 'Error loading.'; });
+        modelRoot.traverse(node => {
+          if (node.isMesh) originalMaterials.set(node, node.material);
+        });
+        
+        buildTree(modelRoot, document.getElementById('tree-content'));
+        info.textContent = "VISUALIZATION ONLINE";
+      }, undefined, (err) => { console.error(err); info.textContent = "UPLOAD FAILED"; });
     }
 
-    function onPointerClick(e) {
+    function loadBOM(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      info.textContent = "PARSING DATA...";
+      
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const data = ev.target.result;
+        // Basic CSV/XLSX detection logic from before (simplified here for brevity)
+        if (file.name.endsWith('.csv')) parseCSV(data);
+        else parseXLSX(data);
+        info.textContent = `DATABASE UPDATED (${Object.keys(bomData).length} RECORDS)`;
+      };
+      
+      if (file.name.endsWith('.csv')) reader.readAsText(file);
+      else reader.readAsArrayBuffer(file);
+    }
+
+    // --- PARSERS ---
+    function parseCSV(text) {
+      bomData = {};
+      const lines = text.split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return;
+      const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      const idx = headers.findIndex(h => h.toLowerCase().includes('part') && h.toLowerCase().includes('nu'));
+      
+      if (idx === -1) return alert("Missing 'Part Number' header");
+
+      for (let i = 1; i < lines.length; i++) {
+        // Simple comma split (robust regex in previous versions if needed)
+        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        if (row[idx]) {
+          const key = normalizeKey(row[idx].replace(/^"|"$/g, ''));
+          bomData[key] = {};
+          headers.forEach((h, j) => {
+            if (row[j]) bomData[key][h] = row[j].replace(/^"|"$/g, '');
+          });
+        }
+      }
+    }
+
+    function parseXLSX(buffer) {
+      bomData = {};
+      const wb = XLSX.read(buffer, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws);
+      if(!json.length) return;
+      
+      const keyCol = Object.keys(json[0]).find(k => k.toLowerCase().includes('part') && k.toLowerCase().includes('nu'));
+      if(!keyCol) return;
+
+      json.forEach(row => {
+        if (row[keyCol]) {
+          const key = normalizeKey(row[keyCol]);
+          bomData[key] = {};
+          Object.keys(row).forEach(k => bomData[key][k] = String(row[k]));
+        }
+      });
+    }
+
+    // --- INTERACTION ---
+    function onClick(e) {
       if (!modelRoot) return;
+      // Calculate mouse
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -920,25 +544,155 @@
       const intersects = raycaster.intersectObjects(modelRoot.children, true);
       
       if (intersects.length > 0) {
-        selectObject(intersects[0].object);
+        selectPart(intersects[0].object);
       } else {
-        if (selectedObject && originalMaterials.has(selectedObject)) {
-          selectedObject.material = originalMaterials.get(selectedObject);
-          selectedObject = null;
-        }
-        document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
-        partValue.textContent = '—';
-        partDetails.innerHTML = '';
+        deselect();
       }
     }
 
-    function animate() {
-      requestAnimationFrame(animate);
-      if (controls) controls.update();
-      if (renderer && scene && camera) renderer.render(scene, camera);
+    function selectPart(obj) {
+      // Highlight 3D
+      if (selectedObject && originalMaterials.has(selectedObject)) {
+        selectedObject.material = originalMaterials.get(selectedObject);
+      }
+      // Find mesh root
+      let target = obj;
+      while(target.parent && !target.isMesh) target = target.parent;
+      if(!target.isMesh) return; // safety
+
+      selectedObject = target;
+      const mat = target.material.clone();
+      mat.emissive = new THREE.Color(0x00ffd5);
+      mat.emissiveIntensity = 0.5;
+      target.material = mat;
+
+      // Update UI
+      // 1. Get Name/Number
+      let name = target.name;
+      if (target.userData && target.userData.partNumber) name = target.userData.partNumber;
+      
+      // 2. Lookup BOM
+      const key = normalizeKey(name);
+      // Fallback: try stripping after ':'
+      let data = bomData[key] || bomData[key.split(':')[0]];
+      
+      partValue.textContent = name;
+      renderHUD(data);
+
+      // 3. Highlight Tree
+      document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
+      const treeNode = objectToNodeMap.get(target);
+      if (treeNode) {
+        treeNode.classList.add('selected');
+        treeNode.scrollIntoView({ block: 'nearest' });
+      }
     }
 
-    checkThree();
+    function deselect() {
+      if (selectedObject && originalMaterials.has(selectedObject)) {
+        selectedObject.material = originalMaterials.get(selectedObject);
+      }
+      selectedObject = null;
+      partValue.textContent = "--";
+      partDetails.innerHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.3); font-style:italic;">AWAITING SELECTION...</div>';
+      document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
+    }
+
+    function renderHUD(data) {
+      if (!data) {
+        partDetails.innerHTML = '<div style="color:var(--hud-text-accent); opacity:0.7;">NO DATABASE RECORD FOUND</div>';
+        return;
+      }
+
+      let html = '<div class="hud-grid">';
+      
+      // Priority Keys to show at top
+      const priority = ['Description', 'QTY', 'Rev', 'Stock Number', 'Material'];
+      
+      // 1. Render Priority
+      priority.forEach(p => {
+        // Find key regardless of case
+        const realKey = Object.keys(data).find(k => k.toLowerCase() === p.toLowerCase());
+        if (realKey && data[realKey]) {
+           html += `
+             <div class="hud-row">
+               <span class="hud-key">${realKey}</span>
+               <span class="hud-val">${data[realKey]}</span>
+             </div>`;
+        }
+      });
+
+      // 2. Render Others
+      Object.keys(data).forEach(k => {
+        const isPriority = priority.some(p => p.toLowerCase() === k.toLowerCase());
+        const isExcluded = k.toLowerCase().includes('part number') || k.toLowerCase().includes('thumbnail');
+        
+        if (!isPriority && !isExcluded && data[k]) {
+          html += `
+             <div class="hud-row">
+               <span class="hud-key">${k}</span>
+               <span class="hud-val">${data[k]}</span>
+             </div>`;
+        }
+      });
+
+      html += '</div>';
+      partDetails.innerHTML = html;
+    }
+
+    // --- TREE VIEW ---
+    function buildTree(obj, container) {
+      if (!obj.name || obj.name.includes('Scene')) {
+        obj.children.forEach(c => buildTree(c, container));
+        return;
+      }
+      
+      const node = document.createElement('div');
+      const item = document.createElement('div');
+      const hasKids = obj.children.length > 0;
+      
+      item.className = 'tree-item';
+      item.innerHTML = `
+        <span class="tree-toggle">${hasKids ? '▶' : '•'}</span>
+        <span>${obj.name}</span>
+      `;
+      node.appendChild(item);
+
+      if (hasKids) {
+        const kidsDiv = document.createElement('div');
+        kidsDiv.className = 'tree-children';
+        obj.children.forEach(c => buildTree(c, kidsDiv));
+        node.appendChild(kidsDiv);
+        
+        item.querySelector('.tree-toggle').onclick = (e) => {
+          e.stopPropagation();
+          kidsDiv.classList.toggle('expanded');
+          e.target.textContent = kidsDiv.classList.contains('expanded') ? '▼' : '▶';
+        };
+      }
+
+      if (obj.isMesh) {
+        objectToNodeMap.set(obj, item);
+        item.onclick = (e) => {
+           if(e.target.classList.contains('tree-toggle')) return;
+           selectPart(obj);
+        };
+      }
+      
+      container.appendChild(node);
+    }
+    
+    function toggleTree(expand) {
+      document.querySelectorAll('.tree-children').forEach(el => {
+        if(expand) el.classList.add('expanded');
+        else el.classList.remove('expanded');
+      });
+      document.querySelectorAll('.tree-toggle').forEach(el => {
+        if(el.textContent !== '•') el.textContent = expand ? '▼' : '▶';
+      });
+    }
+
+    init();
   </script>
 </body>
 </html>
