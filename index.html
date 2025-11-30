@@ -7,24 +7,28 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
 
+    /* ------------------------------------------------------------------
+       THEME VARIABLES
+       ------------------------------------------------------------------ */
     :root {
+      /* Default to LIGHT THEME */
       --bg-gradient: radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%);
       --grid-color: rgba(0, 0, 0, 0.05);
       --text-main: #1e293b;
       --text-muted: #64748b;
       --text-accent: #0284c7;
-
+      
       --panel-bg: rgba(255, 255, 255, 0.90);
       --panel-border: rgba(148, 163, 184, 0.4);
       --panel-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-
+      
       --brand-font: "Orbitron", sans-serif;
       --body-font: "Inter", sans-serif;
-
+      
       --button-bg: #e2e8f0;
       --button-hover: #cbd5e1;
       --button-text: #0f172a;
-
+      
       --highlight-color: #0ea5e9;
       --selected-bg: rgba(14, 165, 233, 0.15);
     }
@@ -55,6 +59,7 @@
       z-index: 0;
     }
 
+    /* --- TOP BAR --- */
     #top-bar {
       position: fixed;
       left: 50%;
@@ -125,9 +130,9 @@
     #fileInput, #bomInput {
       font-size: 11px;
       color: var(--text-muted);
-      width: 180px;
+      width: 180px; 
     }
-
+    
     #fileInput::-webkit-file-upload-button,
     #bomInput::-webkit-file-upload-button {
       font-size: 10px;
@@ -142,7 +147,6 @@
       text-transform: uppercase;
       transition: filter 0.2s;
     }
-
     #fileInput::-webkit-file-upload-button:hover,
     #bomInput::-webkit-file-upload-button:hover {
       filter: brightness(1.1);
@@ -159,6 +163,7 @@
       font-weight: 600;
     }
 
+    /* --- LEFT TREE PANEL --- */
     #tree-panel {
       position: fixed;
       left: 18px;
@@ -200,7 +205,6 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-
     .header-controls button:hover {
       background: var(--button-hover);
     }
@@ -210,13 +214,12 @@
       overflow-y: auto;
       padding: 8px;
     }
-
     #tree-content::-webkit-scrollbar { width: 5px; }
     #tree-content::-webkit-scrollbar-track { background: transparent; }
     #tree-content::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
 
     .tree-node { margin: 1px 0; }
-
+    
     .tree-item {
       display: flex;
       align-items: center;
@@ -247,14 +250,9 @@
       margin-right: 4px; font-size: 8px; color: var(--text-accent);
     }
     .tree-toggle.empty { opacity: 0; }
-
-    .tree-label {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
+    .tree-icon { margin-right: 6px; font-size: 10px; }
+    .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    
     .tree-children {
       margin-left: 14px;
       display: none;
@@ -263,6 +261,7 @@
     }
     .tree-children.expanded { display: block; }
 
+    /* --- BOTTOM DETAILS PANEL --- */
     #part-display {
       position: fixed;
       bottom: 24px;
@@ -301,7 +300,6 @@
       border-bottom: 1px solid var(--panel-border);
       padding-bottom: 8px;
       margin-bottom: 4px;
-      word-break: break-word;
     }
 
     .metadata-grid {
@@ -310,25 +308,14 @@
       gap: 4px 12px;
       font-size: 11px;
     }
-
-    .metadata-label {
-      color: var(--text-muted);
-      font-weight: 500;
-      min-width: 90px;
-    }
-
-    .metadata-value {
-      color: var(--text-main);
-      word-break: break-word;
-      font-weight: 600;
-    }
-
+    .metadata-label { color: var(--text-muted); font-weight: 500; min-width: 80px; }
+    .metadata-value { color: var(--text-main); word-break: break-word; font-weight: 600; }
+    
     .metadata-section {
       margin-top: 12px;
       padding-top: 6px;
       border-top: 1px dashed var(--panel-border);
     }
-
     .metadata-section-title {
       font-size: 9px;
       text-transform: uppercase;
@@ -339,28 +326,13 @@
     }
 
     #hint {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      font-size: 10px;
-      opacity: 0.5;
-      color: var(--text-muted);
-      z-index: 8;
-      text-align: right;
-      pointer-events: none;
+      position: fixed; right: 18px; bottom: 18px;
+      font-size: 10px; opacity: 0.5; color: var(--text-muted);
+      z-index: 8; text-align: right; pointer-events: none;
     }
+    #hint span { color: var(--text-accent); font-weight: 600;}
 
-    #hint span {
-      color: var(--text-accent);
-      font-weight: 600;
-    }
-
-    canvas {
-      display: block;
-      position: relative;
-      z-index: 1;
-      outline: none;
-    }
+    canvas { display: block; position: relative; z-index: 1; outline: none; }
 
     @media (max-width: 768px) {
       #top-bar { max-width: 90vw; flex-wrap: wrap; justify-content: center; top: 10px; }
@@ -371,6 +343,7 @@
   </style>
 </head>
 <body>
+
   <div id="top-bar">
     <div id="brand">
       <div id="brand-dot"></div>
@@ -390,7 +363,6 @@
     <label class="file-label">
       <input type="file" id="bomInput" accept=".csv,.xlsx,.xls" />
     </label>
-
     <span id="info">Loading viewer...</span>
   </div>
 
@@ -404,7 +376,7 @@
     </div>
     <div id="tree-content">
       <div style="padding: 20px; text-align: center; font-size: 11px; color: var(--text-muted);">
-        1) Load GLB model<br>2) Load BOM CSV/XLSX
+        Load a GLB/GLTF model
       </div>
     </div>
   </div>
@@ -412,9 +384,7 @@
   <div id="part-display">
     <div id="part-label">SELECTED PART</div>
     <div id="part-value">—</div>
-    <div id="part-details" style="font-size:11px; color:var(--text-muted);">
-      Select a part in the model or tree.
-    </div>
+    <div id="part-details"></div>
   </div>
 
   <div id="hint">
@@ -422,13 +392,13 @@
     <div>Zoom: <span>Scroll</span> • Select: <span>Click</span></div>
   </div>
 
-  <!-- Three.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <!-- SheetJS for XLS/XLSX -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+  
   <script>
-    /* ------------------ THEME MANAGEMENT ------------------ */
+    /* ------------------------------------------------------------------
+       THEME MANAGEMENT
+       ------------------------------------------------------------------ */
     const themes = {
       light: {
         '--bg-gradient': 'radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%)',
@@ -493,16 +463,24 @@
     };
 
     const themeSelect = document.getElementById('themeSelect');
-    function applyTheme(name) {
-      const t = themes[name];
+    
+    function applyTheme(themeName) {
+      const t = themes[themeName];
       if (!t) return;
       const root = document.documentElement;
-      Object.keys(t).forEach(k => root.style.setProperty(k, t[k]));
+      Object.keys(t).forEach(key => {
+        root.style.setProperty(key, t[key]);
+      });
     }
-    applyTheme('light');
-    themeSelect.addEventListener('change', e => applyTheme(e.target.value));
 
-    /* ------------------ CORE VIEWER STATE ------------------ */
+    applyTheme('light');
+    themeSelect.addEventListener('change', (e) => {
+      applyTheme(e.target.value);
+    });
+
+    /* ------------------------------------------------------------------
+       CORE VIEWER LOGIC
+       ------------------------------------------------------------------ */
     const info = document.getElementById('info');
     const fileInput = document.getElementById('fileInput');
     const bomInput = document.getElementById('bomInput');
@@ -518,451 +496,31 @@
     let selectedObject = null;
     let originalMaterials = new Map();
     let objectToNodeMap = new Map();
-    let bomData = {}; // key = normalized Part Number
+    let bomData = {};
 
-    /* ------------------ HELPERS ------------------ */
-    function normalizeKey(str) {
-      if (!str) return '';
-      let s = String(str).trim();
-      if (s.includes(':')) s = s.split(':')[0].trim();
-      return s.toUpperCase();
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    /* ------------------ BOM PARSING (CSV + XLSX) ------------------ */
-
-    function parseBomCsv(text) {
-      bomData = {};
-      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
-      if (lines.length < 2) {
-        info.textContent = 'BOM file seems empty.';
+    function checkThree() {
+      if (typeof THREE === 'undefined') {
+        info.textContent = 'Loading Three.js...';
+        setTimeout(checkThree, 100);
         return;
       }
-
-      const headerLine = lines[0].replace(/^\uFEFF/, '');
-      const headers = headerLine
-        .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-        .map(h => h.trim().replace(/^"|"$/g, ''));
-
-      // Prefer exact "Part Number", but also allow generic detection
-      let idxPart = headers.findIndex(h => h.toLowerCase() === 'part number');
-      if (idxPart === -1) {
-        idxPart = headers.findIndex(h => {
-          const lower = h.toLowerCase();
-          return lower.includes('part') && (lower.includes('num') || lower.includes('no'));
-        });
-      }
-
-      if (idxPart === -1) {
-        info.textContent = 'Error: no "Part Number" column found in CSV.';
-        return;
-      }
-
-      for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        if (row.length === 1 && row[0].trim() === '') continue;
-
-        const rawPN = (row[idxPart] || '').replace(/^"|"$/g, '').trim();
-        if (!rawPN) continue;
-
-        const key = normalizeKey(rawPN);
-        const entry = {};
-
-        headers.forEach((header, idx) => {
-          const cell = row[idx];
-          if (cell !== undefined) {
-            const val = cell.replace(/^"|"$/g, '').trim();
-            if (val !== '') entry[header] = val;
-          }
-        });
-
-        entry.__partNumber = rawPN;
-        bomData[key] = entry;
-      }
+      loadOrbitControls();
     }
 
-    function parseBomExcel(arrayBuffer) {
-      bomData = {};
-      if (typeof XLSX === 'undefined') {
-        info.textContent = 'Excel library not loaded.';
-        return;
-      }
-
-      const wb = XLSX.read(arrayBuffer, { type: 'array' });
-      const firstSheet = wb.SheetNames[0];
-      const ws = wb.Sheets[firstSheet];
-      const json = XLSX.utils.sheet_to_json(ws, { defval: "" });
-      if (json.length === 0) {
-        info.textContent = 'BOM sheet is empty.';
-        return;
-      }
-
-      const keys = Object.keys(json[0]);
-      let partKey = keys.find(k => k.toLowerCase() === 'part number');
-      if (!partKey) {
-        partKey = keys.find(k => {
-          const lower = k.toLowerCase();
-          return lower.includes('part') && (lower.includes('num') || lower.includes('no'));
-        });
-      }
-      if (!partKey) {
-        info.textContent = 'Error: no "Part Number" column found in XLSX.';
-        return;
-      }
-
-      json.forEach(row => {
-        const rawPN = String(row[partKey] || '').trim();
-        if (!rawPN) return;
-        const key = normalizeKey(rawPN);
-        const entry = {};
-        Object.keys(row).forEach(k => {
-          const v = String(row[k] ?? '').trim();
-          if (v !== '') entry[k] = v;
-        });
-        entry.__partNumber = rawPN;
-        bomData[key] = entry;
-      });
+    function loadOrbitControls() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
+      script.onload = loadGLTFLoader;
+      script.onerror = () => { info.textContent = 'Failed to load OrbitControls'; };
+      document.head.appendChild(script);
     }
 
-    function onBomSelected(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      info.textContent = 'Loading BOM...';
-      const reader = new FileReader();
-      const name = file.name.toLowerCase();
-      const isExcel = name.endsWith('.xlsx') || name.endsWith('.xls');
-      const isCsv = name.endsWith('.csv');
-
-      if (!isExcel && !isCsv) {
-        info.textContent = 'Error: only CSV / XLS / XLSX supported.';
-        return;
-      }
-
-      reader.onload = (ev) => {
-        const data = ev.target.result;
-        try {
-          if (isExcel) parseBomExcel(data);
-          else parseBomCsv(data);
-
-          const count = Object.keys(bomData).length;
-          info.textContent = `BOM loaded (${count} rows).`;
-        } catch (err) {
-          console.error(err);
-          info.textContent = 'Error parsing BOM.';
-        }
-      };
-
-      if (isExcel) reader.readAsArrayBuffer(file);
-      else reader.readAsText(file);
-    }
-
-    /* ------------------ METADATA MERGE (MODEL + BOM) ------------------ */
-    function extractAllMetadata(obj) {
-      const md = {
-        name: 'Unknown',
-        type: obj.isMesh ? 'Part' : 'Assembly',
-        partNumber: null,
-        geometry: {},
-        bomProps: {}
-      };
-
-      // Walk up to get a meaningful name
-      let curr = obj;
-      while (curr) {
-        if (curr.name && !curr.name.match(/Scene|Solid|Mesh/i)) {
-          md.name = curr.name;
-        }
-        if (!md.partNumber && curr.userData && curr.userData.partNumber) {
-          md.partNumber = curr.userData.partNumber;
-        }
-        curr = curr.parent;
-      }
-
-      if (!md.partNumber) md.partNumber = md.name;
-
-      // BOM lookup
-      let key = normalizeKey(md.partNumber);
-      let found = bomData[key];
-
-      // Handle "A-12345:1" vs "A-12345"
-      if (!found && md.partNumber.includes(':')) {
-        const base = normalizeKey(md.partNumber.split(':')[0]);
-        found = bomData[base];
-      }
-
-      if (found) {
-        md.bomProps = found;
-        if (found.__partNumber) {
-          md.partNumber = found.__partNumber;
-        }
-      }
-
-      // Simple geometry info
-      if (obj.isMesh && obj.geometry) {
-        const geo = obj.geometry;
-        if (!geo.boundingBox) geo.computeBoundingBox();
-        if (geo.boundingBox) {
-          const size = new THREE.Vector3();
-          geo.boundingBox.getSize(size);
-          md.geometry.dims = `${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)}`;
-        }
-      }
-
-      return md;
-    }
-
-    function displayMetadata(md) {
-      const bom = md.bomProps || {};
-      const used = new Set(['__partNumber']);
-
-      function getBomField(...names) {
-        for (const n of names) {
-          if (bom[n] != null && bom[n] !== '') {
-            used.add(n);
-            return bom[n];
-          }
-        }
-        return null;
-      }
-
-      let html = '<div class="metadata-grid">';
-
-      const rows = [];
-      const addRow = (label, value) => {
-        if (!value) return;
-        rows.push(
-          `<div class="metadata-label">${escapeHtml(label)}:</div>` +
-          `<div class="metadata-value">${escapeHtml(String(value))}</div>`
-        );
-      };
-
-      // Nice ordering for Inventor BOM sample
-      addRow('Item', getBomField('Item'));
-      addRow('Part Number', getBomField('Part Number') || md.partNumber);
-      addRow('Description', getBomField('Description'));
-      addRow('Stock Number', getBomField('Stock Number'));
-      addRow('Unit QTY', getBomField('Unit QTY'));
-      addRow('QTY', getBomField('QTY'));
-      addRow('BOM Structure', getBomField('BOM Structure'));
-      addRow('REV', getBomField('REV'));
-
-      // Any extra BOM columns go after these
-      Object.keys(bom).forEach(key => {
-        if (used.has(key)) return;
-        const val = bom[key];
-        if (val == null || val === '') return;
-        addRow(key, val);
-      });
-
-      if (rows.length === 0) {
-        addRow('Type', md.type);
-        rows.push(
-          `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">` +
-          `No BOM row found for this part number.</div>`
-        );
-      }
-
-      html += rows.join('') + '</div>';
-
-      if (md.geometry.dims) {
-        html += `
-          <div class="metadata-section">
-            <div class="metadata-section-title">Geometric Data</div>
-            <div class="metadata-grid">
-              <div class="metadata-label">Dimensions:</div>
-              <div class="metadata-value">${escapeHtml(md.geometry.dims)}</div>
-            </div>
-          </div>
-        `;
-      }
-
-      partDetails.innerHTML = html;
-    }
-
-    /* ------------------ TREE BUILDING ------------------ */
-    function buildTreeNode(obj, parentEl) {
-      if (!obj.name || obj.name.match(/Scene/i)) {
-        obj.children.forEach(c => buildTreeNode(c, parentEl));
-        return;
-      }
-
-      const node = document.createElement('div');
-      node.className = 'tree-node';
-
-      const item = document.createElement('div');
-      const hasKids = obj.children && obj.children.some(c => c.name);
-      item.className = `tree-item ${hasKids ? 'assembly' : 'part'}`;
-
-      const toggle = document.createElement('span');
-      toggle.className = `tree-toggle ${hasKids ? '' : 'empty'}`;
-      toggle.textContent = hasKids ? '▶' : '';
-
-      const label = document.createElement('span');
-      label.className = 'tree-label';
-      label.textContent = obj.name;
-
-      item.append(toggle, label);
-      node.append(item);
-
-      if (hasKids) {
-        const kids = document.createElement('div');
-        kids.className = 'tree-children';
-        obj.children.forEach(c => buildTreeNode(c, kids));
-        node.append(kids);
-
-        toggle.onclick = (e) => {
-          e.stopPropagation();
-          kids.classList.toggle('expanded');
-          toggle.textContent = kids.classList.contains('expanded') ? '▼' : '▶';
-        };
-      }
-
-      if (obj.isMesh || hasKids) {
-        item.onclick = (e) => {
-          if (e.target === toggle) return;
-          selectObject(obj);
-        };
-        if (obj.isMesh) objectToNodeMap.set(obj, item);
-      }
-
-      parentEl.appendChild(node);
-    }
-
-    function expandAll() {
-      document.querySelectorAll('.tree-children').forEach(c => c.classList.add('expanded'));
-      document.querySelectorAll('.tree-toggle').forEach(t => {
-        if (t.textContent === '▶') t.textContent = '▼';
-      });
-    }
-
-    function collapseAll() {
-      document.querySelectorAll('.tree-children').forEach(c => c.classList.remove('expanded'));
-      document.querySelectorAll('.tree-toggle').forEach(t => {
-        if (t.textContent === '▼') t.textContent = '▶';
-      });
-    }
-
-    /* ------------------ INTERACTION (SELECT / RAYCAST) ------------------ */
-    function selectObject(obj) {
-      let mesh = obj.isMesh ? obj : null;
-      if (!mesh) {
-        obj.traverse(c => {
-          if (c.isMesh && !mesh) mesh = c;
-        });
-      }
-      if (!mesh) return;
-
-      highlight(mesh);
-      const md = extractAllMetadata(mesh);
-      partValue.textContent = md.partNumber || md.name;
-      displayMetadata(md);
-
-      document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
-      const node = objectToNodeMap.get(mesh);
-      if (node) {
-        node.classList.add('selected');
-        node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }
-
-    function highlight(mesh) {
-      if (selectedObject && originalMaterials.has(selectedObject)) {
-        selectedObject.material = originalMaterials.get(selectedObject);
-      }
-      selectedObject = mesh;
-
-      const highlightHex = getComputedStyle(document.documentElement)
-        .getPropertyValue('--highlight-color').trim() || '#00ffcc';
-
-      const mat = mesh.material.clone();
-      mat.emissive = new THREE.Color(highlightHex);
-      mat.emissiveIntensity = 0.6;
-      mesh.material = mat;
-    }
-
-    function onPointerClick(e) {
-      if (!modelRoot) return;
-
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const hits = raycaster.intersectObjects(modelRoot.children, true);
-
-      if (hits.length > 0) {
-        selectObject(hits[0].object);
-      } else {
-        if (selectedObject && originalMaterials.has(selectedObject)) {
-          selectedObject.material = originalMaterials.get(selectedObject);
-        }
-        selectedObject = null;
-        document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
-        partValue.textContent = '—';
-        partDetails.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">Select a part in the model or tree.</span>';
-      }
-    }
-
-    /* ------------------ MODEL LOADING ------------------ */
-    function onFileSelected(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      info.textContent = 'Loading GLB...';
-      const url = URL.createObjectURL(file);
-      const loader = new THREE.GLTFLoader();
-
-      loader.load(
-        url,
-        (gltf) => {
-          if (modelRoot) scene.remove(modelRoot);
-          modelRoot = gltf.scene;
-          scene.add(modelRoot);
-
-          const box = new THREE.Box3().setFromObject(modelRoot);
-          const center = box.getCenter(new THREE.Vector3());
-          modelRoot.position.sub(center);
-
-          const size = box.getSize(new THREE.Vector3());
-          const maxDim = Math.max(size.x, size.y, size.z);
-          camera.position.set(maxDim, maxDim, maxDim * 1.5);
-          camera.lookAt(0, 0, 0);
-
-          originalMaterials.clear();
-          modelRoot.traverse(c => {
-            if (c.isMesh) originalMaterials.set(c, c.material);
-          });
-
-          treeContent.innerHTML = '';
-          objectToNodeMap.clear();
-          buildTreeNode(modelRoot, treeContent);
-
-          info.textContent = 'Model loaded. Now load BOM and click a part.';
-          partDetails.innerHTML = '<span style="font-size:11px; color:var(--text-muted);">Select a part in the model or tree.</span>';
-
-          URL.revokeObjectURL(url);
-        },
-        undefined,
-        (err) => {
-          console.error(err);
-          info.textContent = 'Error loading GLB.';
-          URL.revokeObjectURL(url);
-        }
-      );
-    }
-
-    /* ------------------ THREE INITIALIZATION ------------------ */
-    function onWindowResize() {
-      if (!camera || !renderer) return;
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+    function loadGLTFLoader() {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+      script.onload = init;
+      script.onerror = () => { info.textContent = 'Failed to load GLTFLoader'; };
+      document.head.appendChild(script);
     }
 
     function init() {
@@ -982,7 +540,7 @@
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
 
-      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2); 
       hemi.position.set(0, 50, 0);
       scene.add(hemi);
 
@@ -1007,35 +565,377 @@
       animate();
     }
 
+    function onWindowResize() {
+      if (!camera || !renderer) return;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // --- KEY NORMALIZATION (UPDATED FOR INVENTOR) ---
+    function normalizeKey(str) {
+      if (!str) return '';
+      let s = String(str).trim();
+      // Remove file extensions often found in Inventor names (e.g. .ipt, .iam)
+      s = s.replace(/\.(ipt|iam|glb|gltf|obj)$/i, '');
+      // Remove instance tags (e.g. :1, :2)
+      if (s.includes(':')) s = s.split(':')[0].trim();
+      return s.toUpperCase();
+    }
+
+    // --- SMART PARSING LOGIC ---
+    
+    // 1. CSV PARSER (Adapted for your CSV Structure)
+    function parseBomCsv(text) {
+      bomData = {};
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      if (lines.length < 2) return;
+      
+      // Parse Header: Clean BOM and quotes
+      const headerLine = lines[0].replace(/^\uFEFF/, ''); 
+      // Split by comma
+      const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+      
+      // Find "Part Number" column index
+      const idxPart = headers.findIndex(h => {
+        const lower = h.toLowerCase();
+        // Matches "Part Number", "PartNo", "Part Num", etc.
+        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
+      });
+
+      if (idxPart === -1) {
+        info.textContent = 'Error: No "Part Number" header found.';
+        return;
+      }
+
+      for (let i = 1; i < lines.length; i++) {
+        // Safe Split: Regex to split on commas ONLY if they are not inside quotes
+        const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        
+        // Ensure row has enough columns
+        if (!row[idxPart]) continue;
+        
+        const partNumber = row[idxPart].replace(/^"|"$/g, '').trim();
+        const key = normalizeKey(partNumber);
+        
+        bomData[key] = {};
+        
+        // Map all columns
+        headers.forEach((header, index) => {
+          if (row[index] !== undefined) {
+            let val = row[index].replace(/^"|"$/g, '').trim();
+            if (val) bomData[key][header] = val;
+          }
+        });
+      }
+    }
+
+    // 2. EXCEL (XLSX) PARSER
+    function parseBomExcel(arrayBuffer) {
+      bomData = {};
+      if (typeof XLSX === 'undefined') {
+         info.textContent = 'Excel library not loaded.';
+         return;
+      }
+
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+      if (jsonData.length === 0) return;
+
+      const keys = Object.keys(jsonData[0]);
+      const partKey = keys.find(k => {
+        const lower = k.toLowerCase();
+        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
+      });
+
+      if (!partKey) {
+        info.textContent = 'Error: No "Part Number" column found in XLSX.';
+        return;
+      }
+
+      jsonData.forEach(row => {
+        const pn = row[partKey];
+        if (pn) {
+          const key = normalizeKey(String(pn));
+          const cleanRow = {};
+          Object.keys(row).forEach(k => {
+            cleanRow[k] = String(row[k]);
+          });
+          bomData[key] = cleanRow;
+        }
+      });
+    }
+
+    function onBomSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      info.textContent = 'Loading BOM...';
+      const reader = new FileReader();
+      
+      const isExcel = file.name.match(/\.(xlsx|xls)$/i);
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+
+      if (!isExcel && !isCsv) {
+        info.textContent = 'Error: Only CSV or Excel files allowed.';
+        return;
+      }
+      
+      reader.onload = (ev) => {
+        const data = ev.target.result;
+        
+        if (isExcel) {
+          parseBomExcel(data);
+        } else if (isCsv) {
+          parseBomCsv(data);
+        }
+        
+        info.textContent = `BOM Loaded (${Object.keys(bomData).length} parts).`;
+      };
+
+      if (isExcel) {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file, 'UTF-8');
+      }
+    }
+
+    // --- METADATA MERGING ---
+    function extractAllMetadata(obj) {
+      const md = { 
+        name: 'Unknown', 
+        type: obj.isMesh ? 'Part' : 'Assembly',
+        partNumber: null,
+        geometry: {}, 
+        bomProps: {}
+      };
+
+      let curr = obj;
+      while(curr) {
+        if (curr.name && !curr.name.match(/Scene|Solid|Mesh/i)) md.name = curr.name;
+        if (curr.userData && curr.userData.partNumber) md.partNumber = curr.userData.partNumber;
+        curr = curr.parent;
+      }
+      
+      if (!md.partNumber) md.partNumber = md.name;
+      
+      const key = normalizeKey(md.partNumber);
+      let foundData = bomData[key];
+
+      // Fallback: If strict key fails, try finding base key from object
+      if (!foundData && md.partNumber.includes(':')) {
+        const base = normalizeKey(md.partNumber.split(':')[0]);
+        foundData = bomData[base];
+      }
+
+      if (foundData) {
+        md.bomProps = foundData;
+      }
+
+      if (obj.isMesh && obj.geometry) {
+         if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+         const size = new THREE.Vector3();
+         obj.geometry.boundingBox.getSize(size);
+         md.geometry.dims = `${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)}`;
+      }
+      return md;
+    }
+
+    // --- DISPLAY LOGIC ---
+    function displayMetadata(md) {
+      let html = '<div class="metadata-grid">';
+      const add = (l, v) => { 
+        if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; 
+      };
+      
+      // 1. BOM DATA
+      if (Object.keys(md.bomProps).length > 0) {
+         // Define Priority Order for Display
+         const order = ['Description', 'QTY', 'Unit QTY', 'Stock Number', 'REV', 'Material', 'Item'];
+         
+         // Display Preferred Keys First
+         order.forEach(k => {
+            const propKey = Object.keys(md.bomProps).find(pk => pk.toLowerCase() === k.toLowerCase());
+            if (propKey && md.bomProps[propKey]) {
+                add(propKey, md.bomProps[propKey]);
+            }
+         });
+
+         // Display Remaining Keys (skipping the ones we already showed or don't want)
+         Object.keys(md.bomProps).forEach(key => {
+            const isOrdered = order.some(o => o.toLowerCase() === key.toLowerCase());
+            const isIgnored = key.toLowerCase().includes('part number') || key.toLowerCase().includes('thumbnail');
+            if (!isOrdered && !isIgnored) {
+               add(key, md.bomProps[key]);
+            }
+         });
+
+      } else {
+         add('Type', md.type);
+         html += `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">No BOM data found for this part.</div>`;
+      }
+      
+      html += '</div>';
+
+      // 2. GEOMETRY (Pushed to bottom)
+      if (md.geometry.dims) {
+        html += `<div class="metadata-section"><div class="metadata-section-title">Geometric Data</div><div class="metadata-grid">`;
+        add('Dimensions', md.geometry.dims);
+        html += `</div></div>`;
+      }
+      
+      partDetails.innerHTML = html;
+    }
+
+    // --- TREE BUILDER ---
+    function buildTreeNode(obj, parentEl) {
+      if (!obj.name || obj.name.match(/Scene/i)) {
+        obj.children.forEach(c => buildTreeNode(c, parentEl));
+        return;
+      }
+      const node = document.createElement('div');
+      node.className = 'tree-node';
+      const item = document.createElement('div');
+      const hasKids = obj.children && obj.children.some(c => c.name);
+      item.className = `tree-item ${hasKids?'assembly':'part'}`;
+      
+      const toggle = document.createElement('span');
+      toggle.className = `tree-toggle ${hasKids?'':'empty'}`;
+      toggle.textContent = hasKids ? '▶' : '';
+      
+      const label = document.createElement('span');
+      label.className = 'tree-label';
+      label.textContent = obj.name;
+
+      item.append(toggle, label);
+      node.append(item);
+
+      if (hasKids) {
+        const kidsContainer = document.createElement('div');
+        kidsContainer.className = 'tree-children';
+        obj.children.forEach(c => buildTreeNode(c, kidsContainer));
+        node.append(kidsContainer);
+        toggle.onclick = (e) => {
+          e.stopPropagation();
+          kidsContainer.classList.toggle('expanded');
+          toggle.textContent = kidsContainer.classList.contains('expanded') ? '▼' : '▶';
+        };
+      }
+      if (obj.isMesh || hasKids) {
+        item.onclick = (e) => {
+          if (e.target === toggle) return;
+          selectObject(obj);
+        };
+        if (obj.isMesh) objectToNodeMap.set(obj, item);
+      }
+      parentEl.appendChild(node);
+    }
+
+    function expandAll() {
+      document.querySelectorAll('.tree-children').forEach(c => c.classList.add('expanded'));
+      document.querySelectorAll('.tree-toggle').forEach(t => { if(t.textContent === '▶') t.textContent = '▼'; });
+    }
+    function collapseAll() {
+      document.querySelectorAll('.tree-children').forEach(c => c.classList.remove('expanded'));
+      document.querySelectorAll('.tree-toggle').forEach(t => { if(t.textContent === '▼') t.textContent = '▶'; });
+    }
+
+    // --- INTERACTION ---
+    function selectObject(obj) {
+      let mesh = obj.isMesh ? obj : null;
+      if (!mesh) obj.traverse(c => { if(c.isMesh && !mesh) mesh = c; });
+      
+      if (mesh) {
+        highlight(mesh);
+        const md = extractAllMetadata(mesh);
+        partValue.textContent = md.partNumber || md.name;
+        displayMetadata(md);
+        
+        document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
+        const node = objectToNodeMap.get(mesh);
+        if (node) {
+          node.classList.add('selected');
+          node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+
+    function highlight(mesh) {
+      if (selectedObject && originalMaterials.has(selectedObject)) {
+        selectedObject.material = originalMaterials.get(selectedObject);
+      }
+      selectedObject = mesh;
+      const highlightHex = getComputedStyle(document.body).getPropertyValue('--highlight-color').trim();
+      const mat = mesh.material.clone();
+      mat.emissive = new THREE.Color(highlightHex);
+      mat.emissiveIntensity = 0.6;
+      mesh.material = mat;
+    }
+
+    function onFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      info.textContent = 'Loading GLB...';
+      const url = URL.createObjectURL(file);
+      const loader = new THREE.GLTFLoader();
+      
+      loader.load(url, (gltf) => {
+        if (modelRoot) scene.remove(modelRoot);
+        modelRoot = gltf.scene;
+        scene.add(modelRoot);
+        
+        const box = new THREE.Box3().setFromObject(modelRoot);
+        const center = box.getCenter(new THREE.Vector3());
+        modelRoot.position.sub(center);
+        
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        camera.position.set(maxDim, maxDim, maxDim*1.5);
+        camera.lookAt(0,0,0);
+        
+        originalMaterials.clear();
+        modelRoot.traverse(c => {
+          if (c.isMesh) originalMaterials.set(c, c.material);
+        });
+
+        treeContent.innerHTML = '';
+        objectToNodeMap.clear();
+        buildTreeNode(modelRoot, treeContent);
+        
+        info.textContent = 'Model Loaded.';
+        partDetails.innerHTML = '<div style="font-size:11px; color:var(--text-muted)">Select a part</div>';
+      }, undefined, (err) => { console.error(err); info.textContent = 'Error loading.'; });
+    }
+
+    function onPointerClick(e) {
+      if (!modelRoot) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(modelRoot.children, true);
+      
+      if (intersects.length > 0) {
+        selectObject(intersects[0].object);
+      } else {
+        if (selectedObject && originalMaterials.has(selectedObject)) {
+          selectedObject.material = originalMaterials.get(selectedObject);
+          selectedObject = null;
+        }
+        document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
+        partValue.textContent = '—';
+        partDetails.innerHTML = '';
+      }
+    }
+
     function animate() {
       requestAnimationFrame(animate);
       if (controls) controls.update();
       if (renderer && scene && camera) renderer.render(scene, camera);
-    }
-
-    function loadOrbitControls() {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
-      script.onload = loadGLTFLoader;
-      script.onerror = () => { info.textContent = 'Failed to load OrbitControls.'; };
-      document.head.appendChild(script);
-    }
-
-    function loadGLTFLoader() {
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-      script.onload = init;
-      script.onerror = () => { info.textContent = 'Failed to load GLTFLoader.'; };
-      document.head.appendChild(script);
-    }
-
-    function checkThree() {
-      if (typeof THREE === 'undefined') {
-        info.textContent = 'Loading Three.js...';
-        setTimeout(checkThree, 100);
-        return;
-      }
-      loadOrbitControls();
     }
 
     checkThree();
