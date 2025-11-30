@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Part Scanner - Flexible BOM</title>
+  <title>Inventor Part Scanner - Column 2 Fixed</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
 
@@ -582,36 +582,39 @@
       return s.toUpperCase();
     }
 
-    // --- BOM PARSING LOGIC (EXCEL & CSV ONLY) ---
+    // --- BOM PARSING LOGIC (STRICT COLUMN 2) ---
     
-    // 1. CSV PARSER
+    // 1. CSV PARSER (Strictly use Column 2 as Key)
     function parseBomCsv(text) {
       bomData = {};
       const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
       if (lines.length < 2) return;
       
-      const headers = lines[0].split(',').map(h => h.trim());
+      // Get all headers from the first row
+      // We will parse properly handling quotes
+      const headersLine = lines[0];
+      const headers = headersLine.split(',').map(h => h.trim());
       
-      // Find Part Number Column
-      const idxPart = headers.findIndex(h => {
-        const lower = h.toLowerCase();
-        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
-      });
-
-      if (idxPart === -1) {
-        console.warn("Could not find 'Part Number' column in CSV");
-        info.textContent = 'Error: No "Part Number" column found in CSV.';
-        return;
+      // We assume Column 2 (Index 1) is Part Number
+      // But let's check bound
+      if (headers.length < 2) {
+         info.textContent = 'Error: CSV must have at least 2 columns.';
+         return;
       }
 
       for (let i = 1; i < lines.length; i++) {
-        // Handle commas within quotes
+        // Regex split to handle commas inside quotes: "Desc, with comma"
         const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-        if (!row[idxPart]) continue;
-        const partNumber = row[idxPart].replace(/^"|"$/g, '').trim();
+        
+        // Grab Column 2 (Index 1)
+        if (!row[1]) continue; 
+        
+        const partNumber = row[1].replace(/^"|"$/g, '').trim();
         const key = normalizeKey(partNumber);
         
         bomData[key] = {};
+        
+        // Store EVERY column mapped to its header
         headers.forEach((header, index) => {
           if (row[index]) {
             let val = row[index].replace(/^"|"$/g, '').trim();
@@ -621,7 +624,7 @@
       }
     }
 
-    // 2. EXCEL (XLSX) PARSER
+    // 2. EXCEL (XLSX) PARSER (Strictly use Column 2 as Key)
     function parseBomExcel(arrayBuffer) {
       bomData = {};
       if (typeof XLSX === 'undefined') {
@@ -630,36 +633,35 @@
       }
 
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      // Assume first sheet
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+      // Convert sheet to "Array of Arrays" (Header is row 0)
+      const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
-      if (jsonData.length === 0) return;
+      if (rows.length < 2) return;
 
-      const keys = Object.keys(jsonData[0]);
-      const partKey = keys.find(k => {
-        const lower = k.toLowerCase();
-        return lower.includes('part') && (lower.includes('no') || lower.includes('num'));
-      });
+      const headers = rows[0]; // First row is headers
 
-      if (!partKey) {
-        info.textContent = 'Error: No "Part Number" column found in XLSX.';
-        return;
+      // Start from index 1 (skip headers)
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        
+        // Grab Column 2 (Index 1)
+        if (!row[1]) continue;
+
+        const partNumber = String(row[1]).trim();
+        const key = normalizeKey(partNumber);
+        
+        bomData[key] = {};
+        
+        // Map all columns
+        headers.forEach((h, colIndex) => {
+           if (row[colIndex] !== undefined) {
+             bomData[key][h] = String(row[colIndex]);
+           }
+        });
       }
-
-      jsonData.forEach(row => {
-        const pn = row[partKey];
-        if (pn) {
-          const key = normalizeKey(String(pn));
-          const cleanRow = {};
-          Object.keys(row).forEach(k => {
-            cleanRow[k] = String(row[k]);
-          });
-          bomData[key] = cleanRow;
-        }
-      });
     }
 
     // Handles the file selection event
@@ -725,9 +727,8 @@
 
       if (foundData) {
         md.bomProps = foundData;
-        const keys = Object.keys(foundData);
-        const pnKey = keys.find(k => k.match(/Part.*Num/i));
-        if (pnKey) md.partNumber = foundData[pnKey];
+        // Since we are forcing col 2 as key, ensure display Name is correct
+        // Find if there is a header for Col 2? Just rely on bomData
       }
 
       if (obj.isMesh && obj.geometry) {
