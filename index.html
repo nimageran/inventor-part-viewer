@@ -957,7 +957,8 @@
           !current.name.toLowerCase().includes('scene') &&
           current.name.trim() !== ''
         ) {
-          return current.name;
+          // Fix for Nima: Remove Inventor instance suffix (e.g. ":1")
+          return current.name.replace(/:\d+$/, '');
         }
         current = current.parent;
       }
