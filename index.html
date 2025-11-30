@@ -76,7 +76,6 @@
       margin-right: 15px;
     }
 
-    /* Custom File Inputs */
     .file-group {
       position: relative;
       overflow: hidden;
@@ -185,7 +184,6 @@
       bottom: 40px;
       right: 40px;
       width: 400px;
-      /* Sci-fi shape */
       clip-path: polygon(
         20px 0, 100% 0, 
         100% calc(100% - 20px), 
@@ -193,15 +191,12 @@
         0 100%, 0 20px
       );
       background: var(--hud-bg);
-      border: 1px solid var(--hud-border); /* Fallback */
-      /* Double border trick using box-shadow doesn't work well with clip-path, so we rely on outline offset or pseudo elements */
-      
-      padding: 2px; /* For inner border effect */
+      border: 1px solid var(--hud-border); 
+      padding: 2px; 
       z-index: 50;
-      display: none; /* Hidden until part selected */
+      display: none; 
     }
 
-    /* Inner Container */
     .hud-inner {
       background: rgba(0,0,0,0.4);
       clip-path: inherit;
@@ -258,7 +253,6 @@
       text-shadow: 0 0 5px var(--hud-accent);
     }
 
-    /* Data Grid */
     .hud-grid {
       display: grid;
       gap: 8px;
@@ -287,13 +281,11 @@
       text-shadow: 0 0 2px rgba(255,255,255,0.3);
     }
 
-    /* Highlight important fields */
     .hud-row.highlight .hud-val {
       color: var(--hud-accent);
       font-weight: 700;
     }
 
-    /* Empty state */
     .no-data {
       color: rgba(255, 50, 50, 0.7);
       font-style: italic;
@@ -303,7 +295,6 @@
       border: 1px dashed rgba(255, 50, 50, 0.3);
     }
 
-    /* --- CANVAS --- */
     canvas { display: block; width: 100vw; height: 100vh; outline: none; }
   </style>
 </head>
@@ -367,7 +358,7 @@
     let modelRoot, selectedObject;
     let originalMaterials = new Map();
     let objectToNodeMap = new Map();
-    let bomData = {}; // Stores CSV data: { "CLEAN_KEY": { Description: "...", ... } }
+    let bomData = {}; 
 
     const hudPanel = document.getElementById('hud-panel');
     const hudName = document.getElementById('hud-name');
@@ -380,22 +371,18 @@
     // ----------------------------------------------------------------------
     // 2. NORMALIZATION LOGIC (CRITICAL FOR MATCHING)
     // ----------------------------------------------------------------------
-    // This connects the GLB file name to the CSV Part Number
     function normalizeKey(str) {
       if (!str) return '';
       let s = String(str).trim();
       
-      // Step 1: Remove CAD file extensions
-      // Example: "Part123.ipt" -> "Part123"
+      // Remove CAD extensions
       s = s.replace(/\.(ipt|iam|glb|gltf|obj|stp|step)$/i, '');
 
-      // Step 2: Remove Instance Numbers often found in Inventor exports
-      // Example: "Part123:1" -> "Part123"
+      // Remove Instance Numbers (e.g. :1, :2)
       if (s.includes(':')) {
         s = s.split(':')[0].trim();
       }
 
-      // Step 3: Uppercase for consistent matching
       return s.toUpperCase();
     }
 
@@ -403,7 +390,7 @@
     // 3. FILE HANDLING
     // ----------------------------------------------------------------------
     
-    // A. CSV/BOM Import
+    // A. CSV Import
     document.getElementById('bomInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -413,15 +400,10 @@
 
       reader.onload = function(e) {
         const data = e.target.result;
-        // Simple CSV Parser tailored for your format
-        // 1. Split lines
         const lines = data.split(/\r?\n/).filter(l => l.trim().length > 0);
         if (lines.length < 2) return;
 
-        // 2. Get Headers (Remove BOM, quotes)
         const headers = lines[0].replace(/^\uFEFF/, '').split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-        
-        // 3. Find "Part Number" Index
         const pnIndex = headers.findIndex(h => h.toLowerCase().includes('part') && h.toLowerCase().includes('nu'));
         
         if (pnIndex === -1) {
@@ -429,20 +411,16 @@
           return;
         }
 
-        bomData = {}; // Clear old data
+        bomData = {}; 
 
-        // 4. Parse Rows
         for (let i = 1; i < lines.length; i++) {
-          // Robust split: Handles commas inside quotes
           const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
           
           if (row[pnIndex]) {
             const rawPN = row[pnIndex].replace(/^"|"$/g, '').trim();
-            const key = normalizeKey(rawPN); // Normalized Key for storage
+            const key = normalizeKey(rawPN);
             
             bomData[key] = {};
-            
-            // Store all columns
             headers.forEach((h, idx) => {
               if (row[idx]) {
                 bomData[key][h] = row[idx].replace(/^"|"$/g, '').trim();
@@ -470,18 +448,15 @@
         modelRoot = gltf.scene;
         scene.add(modelRoot);
 
-        // Center Model
         const box = new THREE.Box3().setFromObject(modelRoot);
         const center = box.getCenter(new THREE.Vector3());
         modelRoot.position.sub(center);
         
-        // Fit Camera
         const size = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         camera.position.set(maxDim, maxDim, maxDim * 1.5);
         camera.lookAt(0, 0, 0);
 
-        // Map Objects for Tree/Selection
         originalMaterials.clear();
         objectToNodeMap.clear();
         document.getElementById('tree-content').innerHTML = '';
@@ -492,7 +467,6 @@
           }
         });
 
-        // Build Tree
         buildTree(modelRoot, document.getElementById('tree-content'));
         statusMsg.textContent = "VISUALIZATION ONLINE";
 
@@ -503,45 +477,62 @@
     });
 
     // ----------------------------------------------------------------------
-    // 4. INTERACTION & HUD LOGIC
+    // 4. INTERACTION (FIXED PARENT FINDING)
     // ----------------------------------------------------------------------
-    function onObjectClick(obj) {
-      // Find the "Part" level object (sometimes Mesh is a child of the Part)
-      let partObj = obj;
-      // If user clicked a mesh, we generally treat it as the object
+    function onObjectClick(mesh) {
+      // 1. CLIMB UP THE TREE
+      // The mesh you clicked is often named "Solid1" or "Body1".
+      // We need to find the parent container that holds the REAL Part Number.
       
-      // 1. Highlight in 3D
-      highlightObject(partObj);
+      let targetObj = mesh;
+      
+      // If the clicked object has a generic name, grab its parent!
+      // Regex checks for "Solid" followed by numbers, or "Body", or "Mesh"
+      while (targetObj.parent && (
+             targetObj.name.match(/^Solid\d*$/i) || 
+             targetObj.name.match(/^Body\d*$/i) || 
+             targetObj.name.match(/^Mesh\d*$/i) ||
+             targetObj.name === "Mesh"
+            )) {
+          // Move selection up to the parent (The Component)
+          targetObj = targetObj.parent;
+      }
+      
+      // Safety: If we climbed all the way to the Scene, step back down one level if possible, 
+      // or just use the mesh itself if it was a false alarm.
+      if (targetObj.type === 'Scene') {
+          targetObj = mesh; 
+      }
 
-      // 2. Identify Name & Key
-      // Check userData (Inventor GLTF export often puts data there) OR object name
-      let rawName = partObj.userData.partNumber || partObj.name || "Unknown";
+      // 2. Highlight the ACTUAL mesh clicked (visual feedback)
+      highlightObject(mesh);
+
+      // 3. Use the TARGET object (the Parent) to find the Name
+      let rawName = targetObj.userData.partNumber || targetObj.name || "Unknown";
       
-      // Normalize to find in CSV
+      // 4. Lookup Data
       const lookupKey = normalizeKey(rawName);
       const data = bomData[lookupKey];
 
-      // 3. Update HUD
+      // 5. Update HUD
       updateHUD(rawName, data);
 
-      // 4. Highlight in Tree
-      selectTreeNode(partObj);
+      // 6. Highlight in Tree
+      selectTreeNode(targetObj.isMesh ? targetObj : mesh); // Select the mesh in tree if parent isn't mapped
     }
 
     function updateHUD(name, data) {
       hudPanel.style.display = 'block';
       hudName.textContent = name;
-      hudGrid.innerHTML = ''; // Clear previous
+      hudGrid.innerHTML = ''; 
 
       if (!data) {
         hudGrid.innerHTML = `<div class="no-data">NO BOM DATA FOUND FOR KEY: "${normalizeKey(name)}"</div>`;
         return;
       }
 
-      // Priority fields to show at top (Customized for Nima)
       const priorityKeys = ['Description', 'QTY', 'Stock Number', 'Material', 'Rev'];
 
-      // Helper to add row
       const addRow = (k, v, highlight=false) => {
         if (!v) return;
         const div = document.createElement('div');
@@ -550,17 +541,14 @@
         hudGrid.appendChild(div);
       };
 
-      // 1. Add Priority Rows
       priorityKeys.forEach(pk => {
-        // Find key case-insensitive
         const realKey = Object.keys(data).find(k => k.toLowerCase() === pk.toLowerCase());
         if (realKey) addRow(realKey, data[realKey], true);
       });
 
-      // 2. Add Remaining Rows
       Object.keys(data).forEach(key => {
         const isPriority = priorityKeys.some(pk => pk.toLowerCase() === key.toLowerCase());
-        const isIgnored = key.toLowerCase().includes('thumbnail') || key.toLowerCase().includes('part number'); // Don't show thumbnail path or duplicate Part No
+        const isIgnored = key.toLowerCase().includes('thumbnail') || key.toLowerCase().includes('part number'); 
         
         if (!isPriority && !isIgnored) {
           addRow(key, data[key], false);
@@ -574,7 +562,6 @@
       }
       selectedObject = mesh;
       
-      // Create SciFi Highlight Material
       const mat = mesh.material.clone();
       mat.emissive = new THREE.Color(0x00f3ff);
       mat.emissiveIntensity = 0.8;
@@ -587,7 +574,6 @@
     function initThree() {
       scene = new THREE.Scene();
 
-      // Lights
       const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
       hemiLight.position.set(0, 20, 0);
       scene.add(hemiLight);
@@ -607,7 +593,6 @@
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
 
-      // Raycaster
       const raycaster = new THREE.Raycaster();
       const mouse = new THREE.Vector2();
 
@@ -617,22 +602,17 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       });
 
-      // Click Handler
       renderer.domElement.addEventListener('pointerdown', (event) => {
-        // Calculate mouse position
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
         raycaster.setFromCamera(mouse, camera);
         
-        // Raycast against model
         if (modelRoot) {
           const intersects = raycaster.intersectObjects(modelRoot.children, true);
           if (intersects.length > 0) {
-            // Find first mesh
             onObjectClick(intersects[0].object);
           } else {
-            // Deselect
             hudPanel.style.display = 'none';
             if (selectedObject && originalMaterials.has(selectedObject)) {
               selectedObject.material = originalMaterials.get(selectedObject);
@@ -689,7 +669,6 @@
       if (obj.isMesh) {
         objectToNodeMap.set(obj, item);
         item.addEventListener('click', (e) => {
-          // Prevent toggling folder when selecting item
           if (e.target.className !== 'tree-toggle') {
             onObjectClick(obj);
           }
@@ -700,13 +679,11 @@
     }
 
     function selectTreeNode(obj) {
-      // Clear old selection
       document.querySelectorAll('.tree-item.selected').forEach(e => e.classList.remove('selected'));
       
       const node = objectToNodeMap.get(obj);
       if (node) {
         node.classList.add('selected');
-        // Auto expand parents? (Optional complex logic, skipping for simplicity)
         node.scrollIntoView({ block: 'center', behavior: 'smooth' });
       }
     }
@@ -714,7 +691,6 @@
     function toggleAll(expand) {
        document.querySelectorAll('.tree-children').forEach(el => el.style.display = expand ? 'block' : 'none');
     }
-
   </script>
 </body>
 </html>
