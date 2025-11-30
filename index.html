@@ -499,19 +499,19 @@
         </div>
 
         <div class="modal-section">
-          <div class="modal-section-title">3. Column Mapping</div>
+          <div class="modal-section-title">3. Column Mapping (Auto-Detected)</div>
           <div class="column-mapping">
             <div class="mapping-field">
               <label>Part Number *</label>
-              <input type="text" id="colPartNum" placeholder="Column Letter (e.g. G)" value="G">
+              <input type="text" id="colPartNum" placeholder="Column Letter (e.g. G)">
             </div>
             <div class="mapping-field">
               <label>Assembly</label>
-              <input type="text" id="colAssembly" placeholder="Column Letter" value="D">
+              <input type="text" id="colAssembly" placeholder="Column Letter">
             </div>
             <div class="mapping-field">
               <label>Description</label>
-              <input type="text" id="colDescription" placeholder="Column Letter" value="H">
+              <input type="text" id="colDescription" placeholder="Column Letter">
             </div>
             <div class="mapping-field">
               <label>Purchase Order</label>
@@ -730,6 +730,36 @@
       const previewTable = document.getElementById('previewTable');
       previewTable.innerHTML = '';
 
+      // --- AUTO-DETECT COLUMNS ---
+      // We look at the first row (headers) and try to match common names
+      const headers = aoa[0] || [];
+      const findColIndex = (keywords) => {
+        return headers.findIndex(h => {
+          if (!h) return false;
+          const txt = String(h).toLowerCase().replace(/[^a-z0-9]/g, '');
+          return keywords.some(k => txt.includes(k));
+        });
+      };
+
+      const mapInput = (id, keywords) => {
+        const idx = findColIndex(keywords);
+        if (idx !== -1) {
+          document.getElementById(id).value = idxToCol(idx);
+        } else {
+          // If not found, clear it so user knows to enter it (or leave previous value if re-opening?)
+          // We will clear it to avoid wrong defaults (like 'G').
+          document.getElementById(id).value = '';
+        }
+      };
+
+      mapInput('colPartNum', ['partnumber', 'partno', 'itemno', 'part']);
+      mapInput('colDescription', ['description', 'desc', 'name']);
+      mapInput('colAssembly', ['assembly', 'assy', 'parent']);
+      mapInput('colQty', ['qty', 'quantity', 'count']);
+      mapInput('colRevision', ['rev', 'revision']);
+      mapInput('colPO', ['purchase', 'po', 'order']);
+      // ----------------------------
+
       const letterRow = document.createElement('tr');
       letterRow.innerHTML = '<th>#</th>';
       const maxCols = (aoa[0]?.length || 26);
@@ -782,7 +812,7 @@
       mbomBtn.innerHTML = '<span>✓</span> MBOM Active';
     }
 
-    // UPDATED LOGIC: Searches BOTH Part Number AND Assembly columns
+    // SMART SEARCH: Handles suffix mismatches (A-607021 vs A-60702)
     function searchMBOM(partNumber) {
       if (!mbomWorkbook || !mbomMapping || !partNumber) return null;
 
@@ -795,20 +825,25 @@
         for (let r = mbomMapping.headerRow; r < aoa.length; r++) {
           const row = aoa[r] || [];
           
-          // Get value from Part Number column
           const partVal = String(row[mbomMapping.partNum] || '').trim().toUpperCase();
           
-          // Get value from Assembly column (if mapped)
           let assemblyVal = '';
           if (mbomMapping.assembly !== null) {
             assemblyVal = String(row[mbomMapping.assembly] || '').trim().toUpperCase();
           }
 
-          // Check if Search Term matches Part Number OR Assembly Number
-          const matchPart = (partVal === searchTerm || (partVal && partVal.includes(searchTerm)));
-          const matchAssembly = (assemblyVal === searchTerm || (assemblyVal && assemblyVal.includes(searchTerm)));
+          // Strict match
+          let match = (partVal === searchTerm) || (assemblyVal === searchTerm);
 
-          if (matchPart || matchAssembly) {
+          // Fuzzy Match 1: CSV contains Search Term (e.g. CSV: "PartA_1", Search: "PartA")
+          if (!match && partVal && partVal.includes(searchTerm)) match = true;
+          if (!match && assemblyVal && assemblyVal.includes(searchTerm)) match = true;
+
+          // Fuzzy Match 2 (The Fix): Search Term contains CSV (e.g. Model: "A-607021", CSV: "A-60702")
+          // We check length > 3 to avoid matching "A" or "1" to everything
+          if (!match && partVal && partVal.length > 3 && searchTerm.includes(partVal)) match = true;
+
+          if (match) {
             return {
               sheet: sheetName,
               row: r + 1,
