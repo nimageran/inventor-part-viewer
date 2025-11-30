@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Part Scanner - Column 2 Fixed</title>
+  <title>Inventor Part Scanner - No Auto-Center</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
 
@@ -837,8 +837,9 @@
           node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
         
-        const box = new THREE.Box3().setFromObject(mesh);
-        controls.target.copy(box.getCenter(new THREE.Vector3()));
+        // REMOVED AUTO-CENTERING
+        // const box = new THREE.Box3().setFromObject(mesh);
+        // controls.target.copy(box.getCenter(new THREE.Vector3()));
       }
     }
 
