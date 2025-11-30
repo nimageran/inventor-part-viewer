@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Part Scanner - Excel & CSV Only</title>
+  <title>Inventor Part Scanner - Flexible BOM</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
 
@@ -18,7 +18,7 @@
       --text-muted: #64748b;
       --text-accent: #0284c7;
       
-      --panel-bg: rgba(255, 255, 255, 0.85);
+      --panel-bg: rgba(255, 255, 255, 0.90);
       --panel-border: rgba(148, 163, 184, 0.4);
       --panel-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
       
@@ -270,7 +270,7 @@
       z-index: 9;
       min-width: 400px;
       max-width: 80vw;
-      max-height: 30vh;
+      max-height: 40vh; /* Increased height for more data */
       padding: 16px 20px;
       border-radius: 12px;
       background: var(--panel-bg);
@@ -297,6 +297,9 @@
       font-size: 16px;
       color: var(--text-accent);
       font-weight: 600;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .metadata-grid {
@@ -305,20 +308,21 @@
       gap: 4px 12px;
       font-size: 11px;
     }
-    .metadata-label { color: var(--text-muted); font-weight: 500; }
-    .metadata-value { color: var(--text-main); word-break: break-word; }
+    .metadata-label { color: var(--text-muted); font-weight: 500; min-width: 80px; }
+    .metadata-value { color: var(--text-main); word-break: break-word; font-weight: 600; }
     
     .metadata-section {
-      margin-top: 8px;
+      margin-top: 12px;
       padding-top: 6px;
-      border-top: 1px solid var(--panel-border);
+      border-top: 1px dashed var(--panel-border);
     }
     .metadata-section-title {
       font-size: 9px;
       text-transform: uppercase;
-      color: var(--text-accent);
-      margin-bottom: 4px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
       font-family: var(--brand-font);
+      opacity: 0.7;
     }
 
     #hint {
@@ -735,32 +739,35 @@
       return md;
     }
 
+    // --- NEW DISPLAY LOGIC ---
     function displayMetadata(md) {
       let html = '<div class="metadata-grid">';
       const add = (l, v) => { 
         if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; 
       };
       
-      add('Type', md.type);
-      add('Part Number', md.partNumber);
-      html += '</div>';
-
+      // 1. BOM DATA (Includes generic type if BOM is empty, otherwise dumps everything)
       if (Object.keys(md.bomProps).length > 0) {
-         html += `<div class="metadata-section"><div class="metadata-section-title">BOM Data</div><div class="metadata-grid">`;
+         // Show EVERYTHING from BOM first
          Object.keys(md.bomProps).forEach(key => {
+           // Skip showing Part Number again as it's the main header
            if (key.toLowerCase().includes('part number') || key.toLowerCase().includes('part no')) return;
            add(key, md.bomProps[key]);
          });
-         html += `</div></div>`;
       } else {
-         html += `<div style="margin-top:10px; font-size:10px; color:var(--text-muted)">No BOM data linked</div>`;
+         add('Type', md.type);
+         html += `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">No BOM data found for this part. Check CSV/Excel.</div>`;
       }
+      
+      html += '</div>';
 
+      // 2. GEOMETRY (At the bottom, as requested)
       if (md.geometry.dims) {
-        html += `<div class="metadata-section"><div class="metadata-section-title">Geometry</div><div class="metadata-grid">`;
+        html += `<div class="metadata-section"><div class="metadata-section-title">Geometric Data</div><div class="metadata-grid">`;
         add('Dimensions', md.geometry.dims);
         html += `</div></div>`;
       }
+      
       partDetails.innerHTML = html;
     }
 
