@@ -3,20 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventor Part Scanner</title>
+  <title>Inventor Part Scanner - Multi-Theme</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Inter:wght@300;400;600&display=swap');
+
+    /* 1. CSS VARIABLES - The engine for swapping themes */
+    :root {
+      /* Default to LIGHT THEME variables initially, will be overwritten by JS */
+      --bg-gradient: radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%);
+      --grid-color: rgba(0, 0, 0, 0.05);
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --text-accent: #0284c7;
+      
+      --panel-bg: rgba(255, 255, 255, 0.85);
+      --panel-border: rgba(148, 163, 184, 0.4);
+      --panel-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      
+      --brand-font: "Orbitron", sans-serif;
+      --body-font: "Inter", sans-serif;
+      
+      --button-bg: #e2e8f0;
+      --button-hover: #cbd5e1;
+      --button-text: #0f172a;
+      
+      --highlight-color: #0ea5e9;
+      --selected-bg: rgba(14, 165, 233, 0.15);
+    }
 
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
       height: 100%;
-      background: radial-gradient(circle at top, #151b3c 0, #050509 45%, #020207 100%);
-      color: #f5f5f5;
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: var(--body-font);
+      transition: background 0.5s ease, color 0.5s ease;
     }
 
+    /* The background grid pattern */
     body::before {
       content: "";
       position: fixed;
@@ -24,16 +50,15 @@
       pointer-events: none;
       background: repeating-linear-gradient(
         to bottom,
-        rgba(255,255,255,0.03),
-        rgba(255,255,255,0.03) 1px,
+        var(--grid-color),
+        var(--grid-color) 1px,
         transparent 1px,
-        transparent 3px
+        transparent 20px
       );
-      mix-blend-mode: soft-light;
-      opacity: 0.35;
       z-index: 0;
     }
 
+    /* --- TOP BAR --- */
     #top-bar {
       position: fixed;
       left: 50%;
@@ -43,144 +68,145 @@
       display: flex;
       gap: 10px;
       align-items: center;
-      background: linear-gradient(135deg, rgba(16, 22, 54, 0.92), rgba(19, 43, 88, 0.9));
+      background: var(--panel-bg);
       border-radius: 999px;
-      padding: 10px 18px;
-      border: 1px solid rgba(120, 220, 255, 0.35);
-      box-shadow:
-        0 0 12px rgba(0, 255, 204, 0.25),
-        0 0 40px rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      padding: 8px 18px;
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--panel-shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       font-size: 12px;
+      transition: all 0.3s ease;
     }
 
     #brand {
       display: flex;
       align-items: center;
       gap: 6px;
-      font-family: "Orbitron", system-ui, sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #9ae6ff;
+      font-family: var(--brand-font);
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      color: var(--text-accent);
       padding-right: 12px;
-      border-right: 1px solid rgba(144, 205, 244, 0.35);
+      border-right: 1px solid var(--panel-border);
     }
 
     #brand-dot {
       width: 8px;
       height: 8px;
-      border-radius: 999px;
-      background: radial-gradient(circle, #32ffb5 0, #0a8370 65%);
-      box-shadow: 0 0 12px #32ffb5;
+      border-radius: 50%;
+      background: var(--highlight-color);
+      box-shadow: 0 0 8px var(--highlight-color);
       animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
     }
 
-    .file-label {
+    /* Inputs and Selects */
+    .file-label, select {
       font-size: 11px;
-      color: #dbeafe;
+      color: var(--text-main);
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-
-    #fileInput,
-    #bomInput {
-      font-size: 11px;
-      color: #dbeafe;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 255, 0.6);
-      background: radial-gradient(circle at top left, rgba(59,130,246,0.25), rgba(15,23,42,0.9));
       cursor: pointer;
     }
 
-    #fileInput::-webkit-file-upload-button,
-    #fileInput::file-selector-button,
-    #bomInput::-webkit-file-upload-button,
-    #bomInput::file-selector-button {
+    #themeSelect {
+      background: var(--button-bg);
+      color: var(--button-text);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      outline: none;
+      font-family: var(--body-font);
       font-size: 11px;
+    }
+
+    #fileInput, #bomInput {
+      font-size: 11px;
+      color: var(--text-muted);
+      width: 180px; 
+    }
+    
+    #fileInput::-webkit-file-upload-button,
+    #bomInput::-webkit-file-upload-button {
+      font-size: 10px;
       padding: 4px 10px;
       border-radius: 999px;
       border: none;
       margin-right: 6px;
-      background: linear-gradient(135deg, #38bdf8, #22c55e);
-      color: #020617;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+      background: var(--highlight-color);
+      color: #fff; /* Always white text on buttons for contrast */
       font-weight: 600;
       cursor: pointer;
+      text-transform: uppercase;
+      transition: filter 0.2s;
+    }
+    #fileInput::-webkit-file-upload-button:hover,
+    #bomInput::-webkit-file-upload-button:hover {
+      filter: brightness(1.1);
     }
 
     #info {
       margin-left: 8px;
-      color: #7df9ff;
+      color: var(--text-accent);
       white-space: nowrap;
-      max-width: 40vw;
+      max-width: 30vw;
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: 11px;
-      opacity: 0.95;
+      font-weight: 600;
     }
 
+    /* --- LEFT TREE PANEL --- */
     #tree-panel {
       position: fixed;
       left: 18px;
       top: 80px;
       bottom: 80px;
-      width: 340px;
-      background: linear-gradient(135deg, rgba(16, 22, 54, 0.93), rgba(19, 43, 88, 0.91));
-      border-radius: 14px;
-      border: 1px solid rgba(120, 220, 255, 0.35);
-      box-shadow:
-        0 0 12px rgba(0, 255, 204, 0.25),
-        0 0 40px rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      width: 300px;
+      background: var(--panel-bg);
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--panel-shadow);
+      backdrop-filter: blur(12px);
       z-index: 9;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: all 0.3s ease;
     }
 
     #tree-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(120, 220, 255, 0.25);
-      font-family: "Orbitron", system-ui, sans-serif;
-      font-size: 11px;
-      letter-spacing: 0.12em;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--panel-border);
+      font-family: var(--brand-font);
+      font-size: 10px;
       text-transform: uppercase;
-      color: #9ae6ff;
+      color: var(--text-accent);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      font-weight: 600;
     }
 
-    #expand-all, #collapse-all {
-      font-size: 10px;
+    .header-controls button {
+      font-size: 9px;
       padding: 3px 8px;
       border-radius: 4px;
-      border: 1px solid rgba(120, 220, 255, 0.3);
-      background: rgba(59, 130, 246, 0.15);
-      color: #7df9ff;
+      border: 1px solid var(--panel-border);
+      background: var(--button-bg);
+      color: var(--button-text);
       cursor: pointer;
       transition: all 0.15s;
     }
-
-    #expand-all:hover, #collapse-all:hover {
-      background: rgba(59, 130, 246, 0.3);
-      border-color: rgba(120, 220, 255, 0.5);
-    }
-
-    .header-controls {
-      display: flex;
-      gap: 6px;
+    .header-controls button:hover {
+      background: var(--button-hover);
     }
 
     #tree-content {
@@ -188,269 +214,154 @@
       overflow-y: auto;
       padding: 8px;
     }
+    /* Scrollbar styling */
+    #tree-content::-webkit-scrollbar { width: 5px; }
+    #tree-content::-webkit-scrollbar-track { background: transparent; }
+    #tree-content::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
 
-    #tree-content::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #tree-content::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 3px;
-    }
-
-    #tree-content::-webkit-scrollbar-thumb {
-      background: rgba(120, 220, 255, 0.4);
-      border-radius: 3px;
-    }
-
-    #tree-content::-webkit-scrollbar-thumb:hover {
-      background: rgba(120, 220, 255, 0.6);
-    }
-
-    .tree-node {
-      margin: 2px 0;
-    }
-
+    .tree-node { margin: 1px 0; }
+    
     .tree-item {
       display: flex;
       align-items: center;
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #cbd5e1;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--text-main);
       cursor: pointer;
-      transition: all 0.15s ease;
       border: 1px solid transparent;
-      position: relative;
+      user-select: none;
     }
 
     .tree-item:hover {
-      background: rgba(59, 130, 246, 0.15);
-      border-color: rgba(59, 130, 246, 0.3);
+      background: var(--button-bg);
     }
 
     .tree-item.selected {
-      background: radial-gradient(circle at top left, rgba(34,197,94,0.25), rgba(15,23,42,0.7));
-      border-color: rgba(45,212,191,0.6);
-      color: #bbf7d0;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+      background: var(--selected-bg);
+      border-color: var(--highlight-color);
+      color: var(--text-main);
     }
 
-    .tree-item.assembly {
-      font-weight: 600;
-      color: #e2e8f0;
-    }
-
-    .tree-item.part {
-      color: #94a3b8;
-    }
-
-    .tree-item.selected.part {
-      color: #bbf7d0;
-    }
+    .tree-item.assembly { font-weight: 600; }
+    .tree-item.part { color: var(--text-muted); }
+    .tree-item.selected.part { color: var(--text-main); }
 
     .tree-toggle {
-      width: 16px;
-      height: 16px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 6px;
-      font-size: 10px;
-      color: #7df9ff;
-      flex-shrink: 0;
+      width: 14px; height: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-right: 4px; font-size: 8px; color: var(--text-accent);
     }
-
-    .tree-toggle.empty {
-      opacity: 0;
-    }
-
-    .tree-icon {
-      width: 16px;
-      height: 16px;
-      margin-right: 6px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-size: 11px;
-    }
-
-    .tree-label {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
+    .tree-toggle.empty { opacity: 0; }
+    .tree-icon { margin-right: 6px; font-size: 10px; }
+    .tree-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    
     .tree-children {
-      margin-left: 20px;
+      margin-left: 14px;
       display: none;
-      border-left: 1px solid rgba(120, 220, 255, 0.2);
+      border-left: 1px solid var(--panel-border);
       padding-left: 4px;
-      margin-top: 2px;
     }
+    .tree-children.expanded { display: block; }
 
-    .tree-children.expanded {
-      display: block;
-    }
-
+    /* --- BOTTOM DETAILS PANEL --- */
     #part-display {
       position: fixed;
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 9;
-      min-width: 380px;
-      max-width: 75vw;
-      max-height: 35vh;
-      padding: 16px 22px;
-      border-radius: 14px;
-      background: radial-gradient(circle at top left, rgba(34,197,94,0.20), rgba(15,23,42,0.96));
-      border: 1px solid rgba(45,212,191,0.55);
-      box-shadow:
-        0 0 18px rgba(16, 185, 129, 0.4),
-        0 0 40px rgba(0, 0, 0, 0.9);
+      min-width: 400px;
+      max-width: 80vw;
+      max-height: 30vh;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--panel-shadow);
+      backdrop-filter: blur(12px);
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       overflow-y: auto;
-    }
-
-    #part-display::-webkit-scrollbar {
-      width: 5px;
-    }
-
-    #part-display::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 3px;
-    }
-
-    #part-display::-webkit-scrollbar-thumb {
-      background: rgba(45,212,191,0.5);
-      border-radius: 3px;
+      transition: all 0.3s ease;
     }
 
     #part-label {
-      font-family: "Orbitron", system-ui, sans-serif;
-      font-size: 10px;
+      font-family: var(--brand-font);
+      font-size: 9px;
       text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: #a5f3fc;
-      opacity: 0.9;
-      margin-bottom: -4px;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
     }
 
     #part-value {
-      font-family: "Orbitron", system-ui, sans-serif;
-      font-size: 18px;
-      color: #bbf7d0;
-      text-shadow:
-        0 0 6px rgba(34,197,94,0.9),
-        0 0 16px rgba(22,163,74,0.9);
+      font-family: var(--brand-font);
+      font-size: 16px;
+      color: var(--text-accent);
       font-weight: 600;
-      margin-bottom: 4px;
     }
 
+    /* Metadata Grid */
     .metadata-grid {
       display: grid;
       grid-template-columns: auto 1fr;
-      gap: 6px 12px;
-      font-size: 12px;
+      gap: 4px 12px;
+      font-size: 11px;
     }
-
-    .metadata-label {
-      color: #7df9ff;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .metadata-value {
-      color: #d1fae5;
-      word-break: break-word;
-    }
-
+    .metadata-label { color: var(--text-muted); font-weight: 500; }
+    .metadata-value { color: var(--text-main); word-break: break-word; }
+    
     .metadata-section {
       margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(45,212,191,0.3);
+      padding-top: 6px;
+      border-top: 1px solid var(--panel-border);
     }
-
     .metadata-section-title {
-      font-size: 10px;
+      font-size: 9px;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: #a5f3fc;
-      margin-bottom: 6px;
-      font-family: "Orbitron", system-ui, sans-serif;
+      color: var(--text-accent);
+      margin-bottom: 4px;
+      font-family: var(--brand-font);
     }
 
+    /* Hint Overlay */
     #hint {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      font-size: 11px;
-      opacity: 0.65;
-      color: #e5e7eb;
-      z-index: 8;
-      text-align: right;
-      pointer-events: none;
+      position: fixed; right: 18px; bottom: 18px;
+      font-size: 10px; opacity: 0.5; color: var(--text-muted);
+      z-index: 8; text-align: right; pointer-events: none;
     }
+    #hint span { color: var(--text-accent); font-weight: 600;}
 
-    #hint span {
-      color: #38bdf8;
-    }
-
-    canvas {
-      display: block;
-      position: relative;
-      z-index: 1;
-    }
-
-    @media (max-width: 1024px) {
-      #tree-panel {
-        width: 300px;
-      }
-    }
+    canvas { display: block; position: relative; z-index: 1; outline: none; }
 
     @media (max-width: 768px) {
-      #tree-panel {
-        left: 8px;
-        top: 70px;
-        bottom: 120px;
-        width: 260px;
-      }
-
-      #top-bar {
-        max-width: 92vw;
-        padding-inline: 12px;
-      }
-
-      #info {
-        display: none;
-      }
-
-      #part-display {
-        bottom: 20px;
-        max-width: 88vw;
-        min-width: 260px;
-      }
+      #top-bar { max-width: 90vw; flex-wrap: wrap; justify-content: center; top: 10px; }
+      #tree-panel { top: 120px; width: 220px; left: 10px; bottom: 10px; }
+      #part-display { bottom: 10px; min-width: 280px; }
+      #info { display: none; }
     }
-
   </style>
 </head>
 <body>
+
   <div id="top-bar">
     <div id="brand">
       <div id="brand-dot"></div>
       <span>PART&nbsp;SCAN</span>
     </div>
+
+    <select id="themeSelect">
+      <option value="light">Light (Default)</option>
+      <option value="dark">Dark Mode</option>
+      <option value="neonPurple">Neon Purple</option>
+      <option value="neonBlue">Neon Blue</option>
+    </select>
+
     <label class="file-label">
-      GLB
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
     <label class="file-label">
-      BOM (CSV/XML)
       <input type="file" id="bomInput" accept=".csv,.xml" />
     </label>
     <span id="info">Loading viewer...</span>
@@ -460,13 +371,13 @@
     <div id="tree-header">
       <span>Assembly Tree</span>
       <div class="header-controls">
-        <button id="expand-all">Expand All</button>
-        <button id="collapse-all">Collapse</button>
+        <button id="expand-all">EXPAND</button>
+        <button id="collapse-all">COLLAPSE</button>
       </div>
     </div>
     <div id="tree-content">
-      <div style="padding: 20px; text-align: center; color: #64748b; font-size: 12px;">
-        Load a model to view assembly
+      <div style="padding: 20px; text-align: center; font-size: 11px; color: var(--text-muted);">
+        Load a GLB/GLTF model
       </div>
     </div>
   </div>
@@ -478,12 +389,101 @@
   </div>
 
   <div id="hint">
-    <div>Rotate: <span>left drag</span> • Pan: <span>right/middle drag</span></div>
-    <div>Zoom: <span>scroll</span> • Select: <span>click part</span></div>
+    <div>Rotate: <span>Left Drag</span> • Pan: <span>Right/Middle</span></div>
+    <div>Zoom: <span>Scroll</span> • Select: <span>Click</span></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
+    /* ------------------------------------------------------------------
+       THEME MANAGEMENT SYSTEM
+       ------------------------------------------------------------------ */
+    const themes = {
+      light: {
+        '--bg-gradient': 'radial-gradient(circle at top, #f8fafc 0, #e2e8f0 100%)',
+        '--grid-color': 'rgba(0, 0, 0, 0.05)',
+        '--text-main': '#1e293b',
+        '--text-muted': '#64748b',
+        '--text-accent': '#0284c7',
+        '--panel-bg': 'rgba(255, 255, 255, 0.9)',
+        '--panel-border': 'rgba(148, 163, 184, 0.4)',
+        '--panel-shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        '--button-bg': '#f1f5f9',
+        '--button-hover': '#e2e8f0',
+        '--button-text': '#0f172a',
+        '--highlight-color': '#0ea5e9',
+        '--selected-bg': 'rgba(14, 165, 233, 0.15)'
+      },
+      dark: {
+        '--bg-gradient': 'radial-gradient(circle at top, #1e293b 0, #0f172a 100%)',
+        '--grid-color': 'rgba(255, 255, 255, 0.03)',
+        '--text-main': '#f1f5f9',
+        '--text-muted': '#94a3b8',
+        '--text-accent': '#38bdf8',
+        '--panel-bg': 'rgba(30, 41, 59, 0.85)',
+        '--panel-border': 'rgba(56, 189, 248, 0.2)',
+        '--panel-shadow': '0 0 15px rgba(0,0,0,0.5)',
+        '--button-bg': '#334155',
+        '--button-hover': '#475569',
+        '--button-text': '#f8fafc',
+        '--highlight-color': '#38bdf8',
+        '--selected-bg': 'rgba(56, 189, 248, 0.15)'
+      },
+      neonPurple: {
+        '--bg-gradient': 'radial-gradient(circle at top, #2e1065 0, #020207 100%)',
+        '--grid-color': 'rgba(216, 180, 254, 0.05)',
+        '--text-main': '#f3e8ff',
+        '--text-muted': '#a855f7',
+        '--text-accent': '#d8b4fe',
+        '--panel-bg': 'rgba(20, 10, 40, 0.85)',
+        '--panel-border': 'rgba(192, 132, 252, 0.4)',
+        '--panel-shadow': '0 0 20px rgba(168, 85, 247, 0.2)',
+        '--button-bg': 'rgba(168, 85, 247, 0.2)',
+        '--button-hover': 'rgba(168, 85, 247, 0.4)',
+        '--button-text': '#ffffff',
+        '--highlight-color': '#d8b4fe',
+        '--selected-bg': 'rgba(216, 180, 254, 0.2)'
+      },
+      neonBlue: {
+        '--bg-gradient': 'radial-gradient(circle at top, #151b3c 0, #020207 100%)',
+        '--grid-color': 'rgba(125, 249, 255, 0.03)',
+        '--text-main': '#e0f2fe',
+        '--text-muted': '#7dd3fc',
+        '--text-accent': '#38bdf8',
+        '--panel-bg': 'rgba(16, 22, 54, 0.9)',
+        '--panel-border': 'rgba(56, 189, 248, 0.3)',
+        '--panel-shadow': '0 0 20px rgba(14, 165, 233, 0.25)',
+        '--button-bg': 'rgba(56, 189, 248, 0.15)',
+        '--button-hover': 'rgba(56, 189, 248, 0.3)',
+        '--button-text': '#ffffff',
+        '--highlight-color': '#00ffcc',
+        '--selected-bg': 'rgba(0, 255, 204, 0.15)'
+      }
+    };
+
+    const themeSelect = document.getElementById('themeSelect');
+    
+    function applyTheme(themeName) {
+      const t = themes[themeName];
+      if (!t) return;
+      
+      const root = document.documentElement;
+      Object.keys(t).forEach(key => {
+        root.style.setProperty(key, t[key]);
+      });
+    }
+
+    // Initialize Default
+    applyTheme('light');
+
+    // Event Listener
+    themeSelect.addEventListener('change', (e) => {
+      applyTheme(e.target.value);
+    });
+
+    /* ------------------------------------------------------------------
+       CORE VIEWER LOGIC (Three.js + BOM)
+       ------------------------------------------------------------------ */
     const info = document.getElementById('info');
     const fileInput = document.getElementById('fileInput');
     const bomInput = document.getElementById('bomInput');
@@ -499,8 +499,6 @@
     let selectedObject = null;
     let originalMaterials = new Map();
     let objectToNodeMap = new Map();
-
-    // BOM map: KEY (normalized part number/name) -> { partNumber, title, description, author }
     let bomData = {};
 
     function checkThree() {
@@ -516,9 +514,7 @@
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js';
       script.onload = loadGLTFLoader;
-      script.onerror = () => {
-        info.textContent = 'Failed to load OrbitControls';
-      };
+      script.onerror = () => { info.textContent = 'Failed to load OrbitControls'; };
       document.head.appendChild(script);
     }
 
@@ -526,24 +522,18 @@
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
       script.onload = init;
-      script.onerror = () => {
-        info.textContent = 'Failed to load GLTFLoader';
-      };
+      script.onerror = () => { info.textContent = 'Failed to load GLTFLoader'; };
       document.head.appendChild(script);
     }
 
     function init() {
-      info.textContent = 'Viewer ready – load GLB (and BOM).';
+      info.textContent = 'Ready. Load GLB file.';
 
       scene = new THREE.Scene();
+      // Important: Scene background is null so CSS gradient shows through
       scene.background = null;
 
-      camera = new THREE.PerspectiveCamera(
-        60,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        2000
-      );
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
       camera.position.set(0, 2, 5);
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -554,28 +544,17 @@
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.rotateSpeed = 0.5;
-      controls.zoomSpeed = 1.2;
-      controls.panSpeed = 0.8;
-      controls.screenSpacePanning = true;
-      controls.minDistance = 0.1;
-      controls.maxDistance = 5000;
 
-      controls.mouseButtons = {
-        LEFT: THREE.MOUSE.ROTATE,
-        MIDDLE: THREE.MOUSE.PAN,
-        RIGHT: THREE.MOUSE.PAN
-      };
-
-      const hemi = new THREE.HemisphereLight(0xbfefff, 0x1f2937, 1.0);
+      // Lighting
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2); 
       hemi.position.set(0, 50, 0);
       scene.add(hemi);
 
-      const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+      const dir1 = new THREE.DirectionalLight(0xffffff, 0.8);
       dir1.position.set(25, 30, 18);
       scene.add(dir1);
 
-      const dir2 = new THREE.DirectionalLight(0x38bdf8, 0.5);
+      const dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
       dir2.position.set(-20, -10, -15);
       scene.add(dir2);
 
@@ -599,43 +578,25 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    function hasChildren(obj) {
-      return obj.children && obj.children.length > 0 &&
-             obj.children.some(child => child.name && child.name !== '');
-    }
-
-    function isMeshNode(obj) {
-      return obj.isMesh || (obj.children && obj.children.some(child => child.isMesh));
-    }
-
+    // --- UTILS ---
     function normalizeKey(str) {
       if (!str) return '';
       let s = String(str).trim();
-      if (s.includes(':')) {
-        s = s.split(':')[0].trim();
-      }
+      if (s.includes(':')) s = s.split(':')[0].trim();
       return s.toUpperCase();
     }
 
-    // ---------- BOM PARSING (CSV + XML) ----------
-
+    // --- BOM PARSING ---
     function parseBomCsv(text) {
       bomData = {};
       const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
       if (lines.length < 2) return;
-
       const header = lines[0].split(',').map(h => h.trim().toLowerCase());
-
-      const idxPart = header.findIndex(h =>
-        h === 'part number' ||
-        h === 'partnumber' ||
-        h === 'part no' ||
-        h === 'part_no' ||
-        h === 'part'
-      );
-      const idxTitle = header.findIndex(h => h === 'title' || h === 'item' || h.includes('title'));
-      const idxDesc = header.findIndex(h => h === 'description' || h.startsWith('descr'));
-      const idxAuthor = header.findIndex(h => h === 'author' || h.includes('author'));
+      
+      const idxPart = header.findIndex(h => h.includes('part') && (h.includes('no') || h.includes('number')));
+      const idxTitle = header.findIndex(h => h.includes('title') || h === 'item');
+      const idxDesc = header.findIndex(h => h.includes('descr'));
+      const idxAuthor = header.findIndex(h => h.includes('author'));
 
       for (let i = 1; i < lines.length; i++) {
         const row = lines[i].split(',');
@@ -643,16 +604,11 @@
         const partNumber = row[idxPart].trim();
         if (!partNumber) continue;
 
-        const title = (idxTitle >= 0 && idxTitle < row.length) ? row[idxTitle].trim() : '';
-        const description = (idxDesc >= 0 && idxDesc < row.length) ? row[idxDesc].trim() : '';
-        const author = (idxAuthor >= 0 && idxAuthor < row.length) ? row[idxAuthor].trim() : '';
-
-        const key = normalizeKey(partNumber);
-        bomData[key] = {
+        bomData[normalizeKey(partNumber)] = {
           partNumber,
-          title,
-          description,
-          author
+          title: (idxTitle >= 0 && row[idxTitle]) ? row[idxTitle].trim() : '',
+          description: (idxDesc >= 0 && row[idxDesc]) ? row[idxDesc].trim() : '',
+          author: (idxAuthor >= 0 && row[idxAuthor]) ? row[idxAuthor].trim() : ''
         };
       }
     }
@@ -660,703 +616,300 @@
     function parseBomXml(text) {
       bomData = {};
       const parser = new DOMParser();
-      const xmlDoc = parser.parseFromString(text, "application/xml");
+      const xml = parser.parseFromString(text, "application/xml");
+      if (xml.getElementsByTagName("parsererror").length > 0) return;
 
-      if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
-        console.error("XML parse error");
-        return;
-      }
-
-      function getTagText(ctx, names) {
-        for (const n of names) {
-          const el = ctx.getElementsByTagName(n)[0];
-          if (el && el.textContent && el.textContent.trim()) {
-            return el.textContent.trim();
-          }
-        }
-        return null;
-      }
-
-      function getPropByName(ctx, names) {
-        const props = Array.from(ctx.getElementsByTagName('Property'));
-        for (const p of props) {
-          const nameAttr = (p.getAttribute('Name') || p.getAttribute('name') || '').toLowerCase();
-          if (names.some(n => nameAttr === n.toLowerCase())) {
-            const valNode = p.getElementsByTagName('Value')[0];
-            if (valNode && valNode.textContent && valNode.textContent.trim()) {
-              return valNode.textContent.trim();
+      const getVal = (el, tags) => {
+        for (const t of tags) {
+          const found = el.getElementsByTagName(t)[0];
+          if (found) return found.textContent.trim();
+          // Also check generic properties
+          const props = Array.from(el.getElementsByTagName('Property'));
+          for (const p of props) {
+            if (p.getAttribute('Name') === t) {
+               const v = p.getElementsByTagName('Value')[0];
+               if (v) return v.textContent.trim();
             }
           }
         }
-        return null;
-      }
+        return '';
+      };
 
-      let rows = Array.from(xmlDoc.getElementsByTagName('Row'));
-      if (rows.length === 0) {
-        rows = Array.from(xmlDoc.getElementsByTagName('BOMRow'));
-      }
-      if (rows.length === 0) {
-        rows = rows.concat(Array.from(xmlDoc.getElementsByTagName('Item')));
-        rows = rows.concat(Array.from(xmlDoc.getElementsByTagName('Part')));
-        rows = rows.concat(Array.from(xmlDoc.getElementsByTagName('Component')));
-      }
-
+      // Try to find rows
+      let rows = [...xml.getElementsByTagName('Row'), ...xml.getElementsByTagName('Item'), ...xml.getElementsByTagName('Component')];
+      
       rows.forEach(row => {
-        let partNumber =
-          getTagText(row, ['PartNumber', 'Part_Number', 'PARTNUMBER', 'PartNo', 'Part']) ||
-          getPropByName(row, ['Part Number', 'PartNumber', 'PartNo', 'Part']);
-
-        if (!partNumber) return;
-
-        const title =
-          getTagText(row, ['Title', 'TITLE']) ||
-          getPropByName(row, ['Title']);
-
-        const description =
-          getTagText(row, ['Description', 'DESCRIP']) ||
-          getPropByName(row, ['Description', 'DESCRIP']);
-
-        const author =
-          getTagText(row, ['Author']) ||
-          getPropByName(row, ['Author']);
-
-        const key = normalizeKey(partNumber);
-        bomData[key] = {
-          partNumber,
-          title: title || '',
-          description: description || '',
-          author: author || ''
-        };
+        const pn = getVal(row, ['PartNumber','Part_Number','PartNo','Part']);
+        if (pn) {
+          bomData[normalizeKey(pn)] = {
+            partNumber: pn,
+            title: getVal(row, ['Title']),
+            description: getVal(row, ['Description','DESCRIP']),
+            author: getVal(row, ['Author'])
+          };
+        }
       });
     }
 
-    function onBomSelected(event) {
-      const file = event.target.files[0];
+    function onBomSelected(e) {
+      const file = e.target.files[0];
       if (!file) return;
-
       info.textContent = 'Loading BOM...';
-
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target.result;
-        const name = file.name.toLowerCase();
-
-        if (name.endsWith('.csv')) {
-          parseBomCsv(text);
-        } else if (name.endsWith('.xml')) {
-          parseBomXml(text);
-        } else {
-          info.textContent = 'Unsupported BOM format (use CSV or XML).';
-          return;
-        }
-
-        const count = Object.keys(bomData).length;
-        info.textContent = 'BOM loaded (' + count + ' rows). ' +
-          (modelRoot ? 'Click a part.' : 'Load GLB next.');
-      };
-      reader.onerror = (e) => {
-        console.error(e);
-        info.textContent = 'Error reading BOM file.';
+      reader.onload = (ev) => {
+        if (file.name.toLowerCase().endsWith('.csv')) parseBomCsv(ev.target.result);
+        else if (file.name.toLowerCase().endsWith('.xml')) parseBomXml(ev.target.result);
+        info.textContent = `BOM Loaded (${Object.keys(bomData).length} rows).`;
       };
       reader.readAsText(file);
     }
 
-    // ---------- METADATA + VIEWER LOGIC ----------
-
+    // --- METADATA extraction ---
     function extractAllMetadata(obj) {
-      const metadata = {
-        name: 'Unknown',
-        type: null,
-        description: null,
-        material: null,
-        partNumber: null,
-        stock: null,
-        mass: null,
-        volume: null,
-        surfaceArea: null,
-        manufacturer: null,
-        partType: null,
-        title: null,
-        author: null,
-        userData: {},
-        geometry: {},
-        materialInfo: {},
-        custom: {}
+      const md = { 
+        name: 'Unknown', type: obj.isMesh ? 'Part' : 'Assembly',
+        partNumber: null, description: null, material: null,
+        geometry: {}, custom: {}
       };
 
-      // Fallback name from hierarchy
-      let current = obj;
-      while (current) {
-        if (
-          current.name &&
-          current.name !== '' &&
-          !current.name.toLowerCase().includes('solid') &&
-          !current.name.toLowerCase().includes('mesh') &&
-          !current.name.toLowerCase().includes('scene')
-        ) {
-          metadata.name = current.name;
-          break;
+      // Traverse up for meaningful name/props
+      let curr = obj;
+      while(curr) {
+        if (curr.name && !curr.name.match(/Scene|Solid|Mesh/i)) md.name = curr.name;
+        if (curr.userData) {
+          if (curr.userData.partNumber) md.partNumber = curr.userData.partNumber;
+          if (curr.userData.description) md.description = curr.userData.description;
+          if (curr.userData.material) md.material = curr.userData.material;
+          // Collect others
+          Object.keys(curr.userData).forEach(k => {
+             if (!['partNumber','description','material','name'].includes(k)) md.custom[k] = curr.userData[k];
+          });
         }
-        current = current.parent;
+        curr = curr.parent;
+      }
+      
+      // Link BOM
+      if (!md.partNumber) md.partNumber = md.name;
+      const key = normalizeKey(md.partNumber);
+      if (bomData[key]) {
+        Object.assign(md, bomData[key]);
+      } else if (md.partNumber.includes(':')) {
+        // Try stripping standard inventor suffixes
+        const base = normalizeKey(md.partNumber.split(':')[0]);
+        if (bomData[base]) Object.assign(md, bomData[base]);
       }
 
-      // Type
-      if (obj.isMesh) {
-        metadata.type = 'Part';
-      } else if (obj.children && obj.children.length > 0) {
-        metadata.type = 'Assembly';
-      }
-
-      // userData from hierarchy
-      current = obj;
-      while (current) {
-        if (current.userData && Object.keys(current.userData).length > 0) {
-          Object.assign(metadata.userData, current.userData);
-
-          if (current.userData.description)  metadata.description  = current.userData.description;
-          if (current.userData.partNumber)   metadata.partNumber   = current.userData.partNumber;
-          if (current.userData.stock)        metadata.stock        = current.userData.stock;
-          if (current.userData.mass)         metadata.mass         = current.userData.mass;
-          if (current.userData.volume)       metadata.volume       = current.userData.volume;
-          if (current.userData.area)         metadata.surfaceArea  = current.userData.area;
-          if (current.userData.material)     metadata.material     = current.userData.material;
-          if (current.userData.manufacturer) metadata.manufacturer = current.userData.manufacturer;
-          if (current.userData.partType)     metadata.partType     = current.userData.partType;
-        }
-        current = current.parent;
-      }
-
-      // Prefer userData.name if exists
-      if (metadata.userData && Object.keys(metadata.userData).length > 0) {
-        const nameKey = Object.keys(metadata.userData).find(
-          key => key.toLowerCase() === 'name'
-        );
-        if (nameKey && metadata.userData[nameKey]) {
-          metadata.name = metadata.userData[nameKey];
-        }
-      }
-
-      // Link to BOM
-      const keyRaw = metadata.partNumber || metadata.name;
-      const key = normalizeKey(keyRaw);
-      let bomEntry = bomData[key];
-
-      if (!bomEntry && keyRaw && String(keyRaw).includes(':')) {
-        const base = normalizeKey(String(keyRaw).split(':')[0]);
-        bomEntry = bomData[base];
-      }
-
-      if (!metadata.partNumber) {
-        metadata.partNumber = metadata.name;
-      }
-
-      if (bomEntry) {
-        if (bomEntry.partNumber) metadata.partNumber = bomEntry.partNumber;
-        if (bomEntry.title)      metadata.title      = bomEntry.title;
-        if (bomEntry.description)metadata.description= bomEntry.description;
-        if (bomEntry.author)     metadata.author     = bomEntry.author;
-      }
-
-      // Geometry
+      // Geo stats
       if (obj.isMesh && obj.geometry) {
-        const geo = obj.geometry;
-
-        if (geo.attributes && geo.attributes.position) {
-          metadata.geometry.vertices = geo.attributes.position.count;
-        }
-
-        if (geo.index) {
-          metadata.geometry.triangles = geo.index.count / 3;
-        } else if (geo.attributes && geo.attributes.position) {
-          metadata.geometry.triangles = geo.attributes.position.count / 3;
-        }
-
-        if (!geo.boundingBox) {
-          geo.computeBoundingBox();
-        }
-        if (geo.boundingBox) {
-          const bbox = geo.boundingBox;
-          const size = new THREE.Vector3();
-          bbox.getSize(size);
-          metadata.geometry.dimensions = {
-            x: size.x.toFixed(3),
-            y: size.y.toFixed(3),
-            z: size.z.toFixed(3)
-          };
-        }
+         if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+         const size = new THREE.Vector3();
+         obj.geometry.boundingBox.getSize(size);
+         md.geometry.dims = `${size.x.toFixed(1)} x ${size.y.toFixed(1)} x ${size.z.toFixed(1)}`;
+         if (obj.geometry.attributes.position) md.geometry.verts = obj.geometry.attributes.position.count;
       }
-
-      // Material info
-      if (obj.isMesh && obj.material) {
-        const mat = obj.material;
-        metadata.materialInfo.type = mat.type;
-
-        if (mat.color) {
-          metadata.materialInfo.color = '#' + mat.color.getHexString();
-        }
-        if (mat.metalness !== undefined) {
-          metadata.materialInfo.metalness = mat.metalness.toFixed(2);
-        }
-        if (mat.roughness !== undefined) {
-          metadata.materialInfo.roughness = mat.roughness.toFixed(2);
-        }
-        if (mat.opacity !== undefined) {
-          metadata.materialInfo.opacity = mat.opacity.toFixed(2);
-        }
-        if (mat.name) {
-          metadata.materialInfo.name = mat.name;
-        }
-      }
-
-      // Custom props
-      if (metadata.userData) {
-        Object.keys(metadata.userData).forEach(key => {
-          const lowerKey = key.toLowerCase();
-          if (![
-            'description',
-            'partnumber',
-            'stock',
-            'mass',
-            'volume',
-            'area',
-            'material',
-            'manufacturer',
-            'parttype',
-            'name'
-          ].includes(lowerKey)) {
-            metadata.custom[key] = metadata.userData[key];
-          }
-        });
-      }
-
-      return metadata;
+      
+      return md;
     }
 
-    function displayMetadata(metadata) {
-      let html = '';
+    function displayMetadata(md) {
+      let html = '<div class="metadata-grid">';
+      
+      const add = (l, v) => { if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; };
+      
+      add('Type', md.type);
+      add('Part Number', md.partNumber);
+      add('Title', md.title);
+      add('Description', md.description);
+      add('Material', md.material);
+      
+      html += '</div>';
 
-      const basicInfo = [];
-      if (metadata.type)         basicInfo.push({ label: 'Type', value: metadata.type });
-      if (metadata.partNumber)   basicInfo.push({ label: 'Part Number', value: metadata.partNumber });
-      if (metadata.title)        basicInfo.push({ label: 'Title', value: metadata.title });
-      if (metadata.description)  basicInfo.push({ label: 'Description', value: metadata.description });
-      if (metadata.author)       basicInfo.push({ label: 'Author', value: metadata.author });
-      if (metadata.manufacturer) basicInfo.push({ label: 'Manufacturer', value: metadata.manufacturer });
-      if (metadata.partType)     basicInfo.push({ label: 'Part Type', value: metadata.partType });
-
-      if (basicInfo.length > 0) {
-        html += '<div class="metadata-grid">';
-        basicInfo.forEach(item => {
-          html += `<div class="metadata-label">${item.label}:</div>`;
-          html += `<div class="metadata-value">${escapeHtml(item.value)}</div>`;
-        });
-        html += '</div>';
+      if (md.geometry.dims) {
+        html += `<div class="metadata-section"><div class="metadata-section-title">Geometry</div><div class="metadata-grid">`;
+        add('Dimensions', md.geometry.dims);
+        add('Vertices', md.geometry.verts);
+        html += `</div></div>`;
       }
 
-      const physicalProps = [];
-      if (metadata.material)    physicalProps.push({ label: 'Material', value: metadata.material });
-      if (metadata.stock)       physicalProps.push({ label: 'Stock', value: metadata.stock });
-      if (metadata.mass)        physicalProps.push({ label: 'Mass', value: metadata.mass });
-      if (metadata.volume)      physicalProps.push({ label: 'Volume', value: metadata.volume });
-      if (metadata.surfaceArea) physicalProps.push({ label: 'Surface Area', value: metadata.surfaceArea });
-
-      if (physicalProps.length > 0) {
-        html += '<div class="metadata-section">';
-        html += '<div class="metadata-section-title">Physical Properties</div>';
-        html += '<div class="metadata-grid">';
-        physicalProps.forEach(item => {
-          html += `<div class="metadata-label">${item.label}:</div>`;
-          html += `<div class="metadata-value">${escapeHtml(item.value)}</div>`;
-        });
-        html += '</div></div>';
+      if (Object.keys(md.custom).length > 0) {
+        html += `<div class="metadata-section"><div class="metadata-section-title">Properties</div><div class="metadata-grid">`;
+        Object.keys(md.custom).forEach(k => add(k, typeof md.custom[k]==='object'?JSON.stringify(md.custom[k]):md.custom[k]));
+        html += `</div></div>`;
       }
-
-      if (metadata.geometry && Object.keys(metadata.geometry).length > 0) {
-        html += '<div class="metadata-section">';
-        html += '<div class="metadata-section-title">Geometry</div>';
-        html += '<div class="metadata-grid">';
-
-        if (metadata.geometry.vertices) {
-          html += `<div class="metadata-label">Vertices:</div>`;
-          html += `<div class="metadata-value">${metadata.geometry.vertices.toLocaleString()}</div>`;
-        }
-        if (metadata.geometry.triangles) {
-          html += `<div class="metadata-label">Triangles:</div>`;
-          html += `<div class="metadata-value">${Math.floor(metadata.geometry.triangles).toLocaleString()}</div>`;
-        }
-        if (metadata.geometry.dimensions) {
-          html += `<div class="metadata-label">Dimensions:</div>`;
-          html += `<div class="metadata-value">${metadata.geometry.dimensions.x} × ${metadata.geometry.dimensions.y} × ${metadata.geometry.dimensions.z}</div>`;
-        }
-
-        html += '</div></div>';
-      }
-
-      if (metadata.materialInfo && Object.keys(metadata.materialInfo).length > 0) {
-        html += '<div class="metadata-section">';
-        html += '<div class="metadata-section-title">Material Properties</div>';
-        html += '<div class="metadata-grid">';
-
-        if (metadata.materialInfo.name) {
-          html += `<div class="metadata-label">Name:</div>`;
-          html += `<div class="metadata-value">${escapeHtml(metadata.materialInfo.name)}</div>`;
-        }
-        if (metadata.materialInfo.type) {
-          html += `<div class="metadata-label">Type:</div>`;
-          html += `<div class="metadata-value">${escapeHtml(metadata.materialInfo.type)}</div>`;
-        }
-        if (metadata.materialInfo.color) {
-          html += `<div class="metadata-label">Color:</div>`;
-          html += `<div class="metadata-value"><span style="display: inline-block; width: 12px; height: 12px; background: ${metadata.materialInfo.color}; border: 1px solid rgba(255,255,255,0.3); margin-right: 6px; vertical-align: middle;"></span>${metadata.materialInfo.color}</div>`;
-        }
-        if (metadata.materialInfo.metalness) {
-          html += `<div class="metadata-label">Metalness:</div>`;
-          html += `<div class="metadata-value">${metadata.materialInfo.metalness}</div>`;
-        }
-        if (metadata.materialInfo.roughness) {
-          html += `<div class="metadata-label">Roughness:</div>`;
-          html += `<div class="metadata-value">${metadata.materialInfo.roughness}</div>`;
-        }
-
-        html += '</div></div>';
-      }
-
-      if (metadata.custom && Object.keys(metadata.custom).length > 0) {
-        html += '<div class="metadata-section">';
-        html += '<div class="metadata-section-title">Custom Properties</div>';
-        html += '<div class="metadata-grid">';
-
-        Object.keys(metadata.custom).forEach(key => {
-          let value = metadata.custom[key];
-          if (typeof value === 'object') {
-            value = JSON.stringify(value);
-          }
-          html += `<div class="metadata-label">${escapeHtml(key)}:</div>`;
-          html += `<div class="metadata-value">${escapeHtml(String(value))}</div>`;
-        });
-
-        html += '</div></div>';
-      }
-
-      if (html === '') {
-        html = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Click on a part to view details</div>';
-      }
-
+      
       partDetails.innerHTML = html;
     }
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function buildTreeNode(obj, parentElement) {
-      if (!obj.name || obj.name === '' || obj.name.toLowerCase().includes('scene')) {
-        obj.children.forEach(child => buildTreeNode(child, parentElement));
+    // --- TREE VIEW ---
+    function buildTreeNode(obj, parentEl) {
+      if (!obj.name || obj.name.match(/Scene/i)) {
+        obj.children.forEach(c => buildTreeNode(c, parentEl));
         return;
       }
 
-      const nodeDiv = document.createElement('div');
-      nodeDiv.className = 'tree-node';
+      const node = document.createElement('div');
+      node.className = 'tree-node';
+      
+      const item = document.createElement('div');
+      const hasKids = obj.children && obj.children.some(c => c.name);
+      item.className = `tree-item ${hasKids?'assembly':'part'}`;
+      
+      // Icon logic
+      const toggle = document.createElement('span');
+      toggle.className = `tree-toggle ${hasKids?'':'empty'}`;
+      toggle.textContent = hasKids ? '▶' : '';
+      
+      const label = document.createElement('span');
+      label.className = 'tree-label';
+      label.textContent = obj.name;
 
-      const itemDiv = document.createElement('div');
-      const hasMesh = isMeshNode(obj);
-      const children = hasChildren(obj);
+      item.append(toggle, label);
+      node.append(item);
 
-      itemDiv.className = children ? 'tree-item assembly' : 'tree-item part';
-
-      const toggleSpan = document.createElement('span');
-      toggleSpan.className = children ? 'tree-toggle' : 'tree-toggle empty';
-      toggleSpan.textContent = children ? '▶' : '';
-
-      const iconSpan = document.createElement('span');
-      iconSpan.className = 'tree-icon';
-      iconSpan.textContent = children ? '📦' : '⚙️';
-
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'tree-label';
-
-      let labelText = obj.name || '';
-      let meshObj = null;
-
-      if (hasMesh) {
-        meshObj = obj.isMesh ? obj : null;
-        if (!meshObj) {
-          obj.traverse(child => {
-            if (child.isMesh && !meshObj) meshObj = child;
-          });
-        }
-
-        if (!children && meshObj) {
-          const md = extractAllMetadata(meshObj);
-          if (md) {
-            if (md.partNumber) {
-              labelText = md.partNumber;
-              if (md.title) {
-                labelText += ' | ' + md.title;
-              } else if (md.description) {
-                labelText += ' | ' + md.description;
-              }
-            } else if (md.name) {
-              labelText = md.name;
-            }
-          }
-        }
-      }
-
-      labelSpan.textContent = labelText;
-
-      itemDiv.appendChild(toggleSpan);
-      itemDiv.appendChild(iconSpan);
-      itemDiv.appendChild(labelSpan);
-
-      nodeDiv.appendChild(itemDiv);
-
-      if (children) {
-        const childrenDiv = document.createElement('div');
-        childrenDiv.className = 'tree-children';
-
-        obj.children.forEach(child => {
-          if (child.name && child.name !== '') {
-            buildTreeNode(child, childrenDiv);
-          }
-        });
-
-        nodeDiv.appendChild(childrenDiv);
-
-        toggleSpan.addEventListener('click', (e) => {
+      if (hasKids) {
+        const kidsContainer = document.createElement('div');
+        kidsContainer.className = 'tree-children';
+        obj.children.forEach(c => buildTreeNode(c, kidsContainer));
+        node.append(kidsContainer);
+        
+        toggle.onclick = (e) => {
           e.stopPropagation();
-          const isExpanded = childrenDiv.classList.contains('expanded');
-          if (isExpanded) {
-            childrenDiv.classList.remove('expanded');
-            toggleSpan.textContent = '▶';
-          } else {
-            childrenDiv.classList.add('expanded');
-            toggleSpan.textContent = '▼';
-          }
-        });
+          kidsContainer.classList.toggle('expanded');
+          toggle.textContent = kidsContainer.classList.contains('expanded') ? '▼' : '▶';
+        };
       }
 
-      if (hasMesh) {
-        itemDiv.addEventListener('click', (e) => {
-          if (e.target === toggleSpan) return;
-          selectObjectFromTree(obj);
-        });
-
-        if (meshObj) {
-          objectToNodeMap.set(meshObj, itemDiv);
-        }
+      // Selection logic
+      if (obj.isMesh || hasKids) {
+        item.onclick = (e) => {
+          if (e.target === toggle) return;
+          selectObject(obj);
+        };
+        // Map mesh to this UI node for auto-scroll
+        if (obj.isMesh) objectToNodeMap.set(obj, item);
       }
-
-      parentElement.appendChild(nodeDiv);
-    }
-
-    function buildPartsTree() {
-      treeContent.innerHTML = '';
-      objectToNodeMap.clear();
-      if (!modelRoot) return;
-      buildTreeNode(modelRoot, treeContent);
+      
+      parentEl.appendChild(node);
     }
 
     function expandAll() {
-      document.querySelectorAll('.tree-children').forEach(child => {
-        child.classList.add('expanded');
-      });
-      document.querySelectorAll('.tree-toggle').forEach(toggle => {
-        if (toggle.textContent === '▶') {
-          toggle.textContent = '▼';
-        }
-      });
+      document.querySelectorAll('.tree-children').forEach(c => c.classList.add('expanded'));
+      document.querySelectorAll('.tree-toggle').forEach(t => { if(t.textContent === '▶') t.textContent = '▼'; });
     }
-
     function collapseAll() {
-      document.querySelectorAll('.tree-children').forEach(child => {
-        child.classList.remove('expanded');
-      });
-      document.querySelectorAll('.tree-toggle').forEach(toggle => {
-        if (toggle.textContent === '▼') {
-          toggle.textContent = '▶';
-        }
-      });
+      document.querySelectorAll('.tree-children').forEach(c => c.classList.remove('expanded'));
+      document.querySelectorAll('.tree-toggle').forEach(t => { if(t.textContent === '▼') t.textContent = '▶'; });
     }
 
-    function selectObjectFromTree(obj) {
-      let meshToHighlight = obj.isMesh ? obj : null;
-      if (!meshToHighlight) {
-        obj.traverse(child => {
-          if (child.isMesh && !meshToHighlight) {
-            meshToHighlight = child;
-          }
-        });
-      }
-      if (meshToHighlight) {
-        highlightObject(meshToHighlight);
-        const metadata = extractAllMetadata(meshToHighlight);
-        partValue.textContent = metadata.partNumber || metadata.name || '—';
-        displayMetadata(metadata);
-
-        document.querySelectorAll('.tree-item').forEach(item => {
-          item.classList.remove('selected');
-        });
-
-        if (objectToNodeMap.has(meshToHighlight)) {
-          const node = objectToNodeMap.get(meshToHighlight);
+    // --- SELECTION & HIGHLIGHTING ---
+    function selectObject(obj) {
+      // Find actual mesh if group selected
+      let mesh = obj.isMesh ? obj : null;
+      if (!mesh) obj.traverse(c => { if(c.isMesh && !mesh) mesh = c; });
+      
+      if (mesh) {
+        highlight(mesh);
+        const md = extractAllMetadata(mesh);
+        partValue.textContent = md.partNumber || md.name;
+        displayMetadata(md);
+        
+        // Tree UI update
+        document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
+        const node = objectToNodeMap.get(mesh);
+        if (node) {
           node.classList.add('selected');
           node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
-
-        focusOnObject(meshToHighlight);
+        
+        // Camera focus
+        const box = new THREE.Box3().setFromObject(mesh);
+        controls.target.copy(box.getCenter(new THREE.Vector3()));
       }
     }
 
-    function focusOnObject(obj) {
-      const box = new THREE.Box3().setFromObject(obj);
-      const center = box.getCenter(new THREE.Vector3());
-
-      controls.target.copy(center);
-      controls.update();
+    function highlight(mesh) {
+      if (selectedObject && originalMaterials.has(selectedObject)) {
+        selectedObject.material = originalMaterials.get(selectedObject);
+      }
+      selectedObject = mesh;
+      
+      // Get current highlight color from CSS var
+      const highlightHex = getComputedStyle(document.body).getPropertyValue('--highlight-color').trim();
+      
+      const mat = mesh.material.clone();
+      mat.emissive = new THREE.Color(highlightHex);
+      mat.emissiveIntensity = 0.6;
+      mesh.material = mat;
     }
 
-    function onFileSelected(event) {
-      const file = event.target.files[0];
+    // --- MAIN EVENTS ---
+    function onFileSelected(e) {
+      const file = e.target.files[0];
       if (!file) return;
-
-      info.textContent = 'Loading model...';
-      partValue.textContent = '—';
-      partDetails.innerHTML = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Loading...</div>';
-      clearSelection();
-
+      
+      info.textContent = 'Loading GLB...';
       const url = URL.createObjectURL(file);
       const loader = new THREE.GLTFLoader();
-
-      loader.load(
-        url,
-        (gltf) => {
-          if (modelRoot) {
-            scene.remove(modelRoot);
-          }
-          modelRoot = gltf.scene;
-          scene.add(modelRoot);
-
-          originalMaterials.clear();
-          modelRoot.traverse((child) => {
-            if (child.isMesh && child.material) {
-              originalMaterials.set(child, child.material.clone());
-            }
-          });
-
-          const box = new THREE.Box3().setFromObject(modelRoot);
-          const size = box.getSize(new THREE.Vector3());
-          const center = box.getCenter(new THREE.Vector3());
-          modelRoot.position.sub(center);
-
-          const maxDim = Math.max(size.x, size.y, size.z);
-          const fov = camera.fov * (Math.PI / 180);
-          let cameraZ = maxDim / (2 * Math.tan(fov / 2));
-          cameraZ *= 1.6;
-
-          camera.position.set(0, maxDim * 0.35, cameraZ);
-          camera.lookAt(0, 0, 0);
-          controls.target.set(0, 0, 0);
-          controls.update();
-
-          buildPartsTree();
-
-          const bomCount = Object.keys(bomData).length;
-          info.textContent = 'Model loaded. ' +
-            (bomCount ? 'BOM linked (' + bomCount + ' rows).' : 'No BOM loaded yet.') +
-            ' Click a part to scan.';
-
-          partDetails.innerHTML = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Click on a part to view details</div>';
-
-          URL.revokeObjectURL(url);
-        },
-        (xhr) => {
-          if (xhr.lengthComputable) {
-            const percent = (xhr.loaded / xhr.total) * 100;
-            info.textContent = 'Loading model... ' + percent.toFixed(1) + '%';
-          }
-        },
-        (error) => {
-          console.error(error);
-          info.textContent = 'Error loading model';
-          URL.revokeObjectURL(url);
-        }
-      );
-    }
-
-    function clearSelection() {
-      if (selectedObject) {
-        if (originalMaterials.has(selectedObject)) {
-          selectedObject.material = originalMaterials.get(selectedObject).clone();
-        }
-        selectedObject = null;
-      }
-      document.querySelectorAll('.tree-item').forEach(item => {
-        item.classList.remove('selected');
-      });
-    }
-
-    function highlightObject(obj) {
-      clearSelection();
-
-      if (obj && obj.isMesh && obj.material) {
-        selectedObject = obj;
-        const highlightMat = obj.material.clone();
-
-        if (highlightMat.emissive) {
-          highlightMat.emissive.setHex(0x00ffcc);
-          highlightMat.emissiveIntensity = 0.5;
-        } else {
-          highlightMat.emissive = new THREE.Color(0x00ffcc);
-          highlightMat.emissiveIntensity = 0.5;
-        }
-
-        obj.material = highlightMat;
-      }
-    }
-
-    function onPointerClick(event) {
-      if (!modelRoot) return;
-
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      if (intersects.length > 0) {
-        let obj = intersects[0].object;
-        highlightObject(obj);
-
-        const metadata = extractAllMetadata(obj);
-        partValue.textContent = metadata.partNumber || metadata.name || '—';
-        displayMetadata(metadata);
-
-        document.querySelectorAll('.tree-item').forEach(item => {
-          item.classList.remove('selected');
+      
+      loader.load(url, (gltf) => {
+        if (modelRoot) scene.remove(modelRoot);
+        modelRoot = gltf.scene;
+        scene.add(modelRoot);
+        
+        // Center model
+        const box = new THREE.Box3().setFromObject(modelRoot);
+        const center = box.getCenter(new THREE.Vector3());
+        modelRoot.position.sub(center);
+        
+        // Adjust Camera
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        camera.position.set(maxDim, maxDim, maxDim*1.5);
+        camera.lookAt(0,0,0);
+        
+        // Save materials
+        originalMaterials.clear();
+        modelRoot.traverse(c => {
+          if (c.isMesh) originalMaterials.set(c, c.material);
         });
 
-        if (objectToNodeMap.has(obj)) {
-          const node = objectToNodeMap.get(obj);
-          node.classList.add('selected');
-          node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
+        // Rebuild Tree
+        treeContent.innerHTML = '';
+        objectToNodeMap.clear();
+        buildTreeNode(modelRoot, treeContent);
+        
+        info.textContent = 'Model Loaded.';
+        partDetails.innerHTML = '<div style="font-size:11px; color:var(--text-muted)">Select a part</div>';
+      }, undefined, (err) => { console.error(err); info.textContent = 'Error loading.'; });
+    }
+
+    function onPointerClick(e) {
+      if (!modelRoot) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(modelRoot.children, true);
+      
+      if (intersects.length > 0) {
+        selectObject(intersects[0].object);
       } else {
-        clearSelection();
+        // Deselect
+        if (selectedObject && originalMaterials.has(selectedObject)) {
+          selectedObject.material = originalMaterials.get(selectedObject);
+          selectedObject = null;
+        }
+        document.querySelectorAll('.tree-item.selected').forEach(el => el.classList.remove('selected'));
         partValue.textContent = '—';
-        partDetails.innerHTML = '<div style="color: #94a3b8; font-size: 12px; font-style: italic;">Click on a part to view details</div>';
+        partDetails.innerHTML = '';
       }
     }
 
     function animate() {
       requestAnimationFrame(animate);
-      if (controls && renderer && camera && scene) {
-        controls.update();
-        renderer.render(scene, camera);
-      }
+      if (controls) controls.update();
+      if (renderer && scene && camera) renderer.render(scene, camera);
     }
 
     checkThree();
