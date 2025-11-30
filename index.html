@@ -591,22 +591,20 @@
       if (lines.length < 2) return;
       
       // Get all headers from the first row
-      // We will parse properly handling quotes
       const headersLine = lines[0];
       const headers = headersLine.split(',').map(h => h.trim());
       
-      // We assume Column 2 (Index 1) is Part Number
-      // But let's check bound
+      // We assume Column 2 (Index 1) is Part Number based on your file
       if (headers.length < 2) {
          info.textContent = 'Error: CSV must have at least 2 columns.';
          return;
       }
 
       for (let i = 1; i < lines.length; i++) {
-        // Regex split to handle commas inside quotes: "Desc, with comma"
+        // Regex split to handle commas inside quotes
         const row = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         
-        // Grab Column 2 (Index 1)
+        // Grab Column 2 (Index 1) - The Part Number
         if (!row[1]) continue; 
         
         const partNumber = row[1].replace(/^"|"$/g, '').trim();
@@ -647,7 +645,7 @@
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         
-        // Grab Column 2 (Index 1)
+        // Grab Column 2 (Index 1) - The Part Number
         if (!row[1]) continue;
 
         const partNumber = String(row[1]).trim();
@@ -727,8 +725,6 @@
 
       if (foundData) {
         md.bomProps = foundData;
-        // Since we are forcing col 2 as key, ensure display Name is correct
-        // Find if there is a header for Col 2? Just rely on bomData
       }
 
       if (obj.isMesh && obj.geometry) {
@@ -740,29 +736,27 @@
       return md;
     }
 
-    // --- NEW DISPLAY LOGIC ---
+    // --- DISPLAY LOGIC ---
     function displayMetadata(md) {
       let html = '<div class="metadata-grid">';
       const add = (l, v) => { 
         if(v) html += `<div class="metadata-label">${l}:</div><div class="metadata-value">${v}</div>`; 
       };
       
-      // 1. BOM DATA (Includes generic type if BOM is empty, otherwise dumps everything)
+      // 1. BOM DATA (Show everything found in Excel/CSV)
       if (Object.keys(md.bomProps).length > 0) {
-         // Show EVERYTHING from BOM first
          Object.keys(md.bomProps).forEach(key => {
-           // Skip showing Part Number again as it's the main header
-           if (key.toLowerCase().includes('part number') || key.toLowerCase().includes('part no')) return;
+           // We can hide the raw 'Part Number' if desired, but here we show everything
            add(key, md.bomProps[key]);
          });
       } else {
          add('Type', md.type);
-         html += `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">No BOM data found for this part. Check CSV/Excel.</div>`;
+         html += `<div style="grid-column:1/-1; margin-top:5px; font-size:10px; color:var(--text-muted); font-style:italic;">No BOM data found. Check Column 2 of your file.</div>`;
       }
       
       html += '</div>';
 
-      // 2. GEOMETRY (At the bottom, as requested)
+      // 2. GEOMETRY (Pushed to bottom)
       if (md.geometry.dims) {
         html += `<div class="metadata-section"><div class="metadata-section-title">Geometric Data</div><div class="metadata-grid">`;
         add('Dimensions', md.geometry.dims);
