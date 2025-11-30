@@ -10,13 +10,12 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* Base Engineering Theme (Dark Default for Professional Look) */
+      /* Base Engineering Theme */
       --bg-main: #0f1115;
       --bg-grid: rgba(255, 255, 255, 0.03);
       
       --glass-bg: rgba(20, 24, 30, 0.75);
       --glass-border: rgba(255, 255, 255, 0.1);
-      --glass-highlight: rgba(255, 255, 255, 0.05);
       --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 
       --accent-primary: #3b82f6; /* Tech Blue */
@@ -81,7 +80,6 @@
 
     /* --- UI COMPONENTS --- */
 
-    /* The "Glass" Utility */
     .glass-panel {
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
@@ -90,7 +88,6 @@
       box-shadow: var(--glass-shadow);
     }
 
-    /* Scrollbars */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
@@ -135,7 +132,6 @@
       border-radius: 50%;
     }
 
-    /* Inputs as Buttons */
     .file-input-wrapper {
       position: relative;
       overflow: hidden;
@@ -172,6 +168,14 @@
       box-shadow: 0 0 15px var(--accent-glow);
     }
 
+    /* Success State for Upload Buttons */
+    .file-btn.success {
+      border-color: var(--accent-success);
+      color: var(--accent-success);
+      background: rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    }
+
     #themeSelect {
       background: transparent;
       border: 1px solid var(--glass-border);
@@ -192,9 +196,7 @@
       letter-spacing: 0.5px;
     }
 
-    /* --- SIDEBARS (LEFT & RIGHT) --- */
-    
-    /* Left Tree Panel */
+    /* --- SIDEBARS --- */
     #tree-panel {
       position: fixed;
       top: 80px; left: 20px; bottom: 30px;
@@ -205,7 +207,6 @@
       z-index: 50;
     }
 
-    /* Right Part Panel - Moved from bottom to right for "Workstation" feel */
     #part-display {
       position: fixed;
       top: 80px; right: 20px; bottom: auto;
@@ -217,7 +218,6 @@
       flex-direction: column;
       padding: 20px;
       overflow-y: auto;
-      /* Animation for entry */
       transform: translateX(20px);
       opacity: 0;
       animation: slideIn 0.5s forwards;
@@ -258,7 +258,6 @@
       color: var(--accent-primary);
     }
 
-    /* Tree Content */
     #tree-content {
       flex: 1;
       overflow-y: auto;
@@ -284,7 +283,7 @@
     }
 
     .tree-item.selected {
-      background: rgba(59, 130, 246, 0.1); /* Low opacity blue */
+      background: rgba(59, 130, 246, 0.1); 
       border-color: var(--accent-primary);
       color: var(--text-main);
       box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
@@ -302,7 +301,6 @@
     .tree-children.expanded { display: block; }
     .tree-empty { text-align: center; padding: 40px 0; color: var(--text-label); font-style: italic; }
 
-    /* Part Display Styling */
     #part-label {
       font-family: var(--font-tech);
       font-size: 10px;
@@ -393,7 +391,6 @@
       letter-spacing: 0.05em;
     }
 
-    /* Mapping Grid */
     .column-mapping {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;
     }
@@ -408,7 +405,6 @@
     }
     .mapping-field input:focus { border-color: var(--accent-primary); outline: none; }
 
-    /* Sheet Chips */
     .sheet-selector { display: flex; gap: 8px; flex-wrap: wrap; }
     .sheet-chip {
       padding: 6px 12px; font-size: 11px;
@@ -423,7 +419,6 @@
       box-shadow: 0 0 10px var(--accent-glow);
     }
 
-    /* Action Button */
     .btn-primary {
       width: 100%;
       padding: 12px;
@@ -439,7 +434,6 @@
       box-shadow: 0 0 20px var(--accent-glow);
     }
 
-    /* Preview Table */
     .preview-table-wrap {
       border: 1px solid var(--glass-border);
       border-radius: var(--radius-sm);
@@ -465,14 +459,14 @@
     <div class="top-right">
       <div class="file-input-wrapper">
         <input type="file" id="mbomInput" accept=".xlsx,.xls,.xlsm,.csv" />
-        <div class="file-btn">
+        <div class="file-btn" id="mbomBtn">
           <span>📊</span> Load MBOM
         </div>
       </div>
 
       <div class="file-input-wrapper">
         <input type="file" id="modelInput" accept=".glb,.gltf" />
-        <div class="file-btn">
+        <div class="file-btn" id="modelBtn">
           <span>🎨</span> Load 3D Model
         </div>
       </div>
@@ -588,6 +582,10 @@
     const partDetails = document.getElementById('part-details');
     const treeContent = document.getElementById('tree-content');
     const themeSelect = document.getElementById('themeSelect');
+    
+    // UI Buttons
+    const mbomBtn = document.getElementById('mbomBtn');
+    const modelBtn = document.getElementById('modelBtn');
 
     // Theme switching
     themeSelect.addEventListener('change', (e) => {
@@ -624,7 +622,7 @@
       info.textContent = 'System Ready';
 
       scene = new THREE.Scene();
-      scene.background = null; // transparent, so it follows CSS background
+      scene.background = null; 
 
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
       camera.position.set(0, 2, 5);
@@ -637,11 +635,6 @@
       controls = new THREE.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.08;
-      controls.mouseButtons = {
-        LEFT: THREE.MOUSE.ROTATE,
-        MIDDLE: THREE.MOUSE.PAN,
-        RIGHT: THREE.MOUSE.PAN
-      };
 
       const hemi = new THREE.HemisphereLight(0xbfefff, 0x1f2937, 1.0);
       scene.add(hemi);
@@ -680,7 +673,6 @@
 
     function onPointerClick(event) {
       if (!modelRoot) return;
-
       mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
@@ -688,8 +680,7 @@
       const intersects = raycaster.intersectObjects(modelRoot.children, true);
 
       if (intersects.length > 0) {
-        const obj = intersects[0].object;
-        selectObject(obj);
+        selectObject(intersects[0].object);
       }
     }
 
@@ -785,8 +776,13 @@
       mbomSheets = Array.from(selectedSheets);
       mbomModal.classList.remove('active');
       info.textContent = `MBOM Linked (${mbomSheets.length} sheets)`;
+
+      // UI Update: Visual Checkmark for MBOM
+      mbomBtn.classList.add('success');
+      mbomBtn.innerHTML = '<span>✓</span> MBOM Active';
     }
 
+    // UPDATED LOGIC: Searches BOTH Part Number AND Assembly columns
     function searchMBOM(partNumber) {
       if (!mbomWorkbook || !mbomMapping || !partNumber) return null;
 
@@ -798,9 +794,21 @@
 
         for (let r = mbomMapping.headerRow; r < aoa.length; r++) {
           const row = aoa[r] || [];
-          const cellValue = String(row[mbomMapping.partNum] || '').trim().toUpperCase();
+          
+          // Get value from Part Number column
+          const partVal = String(row[mbomMapping.partNum] || '').trim().toUpperCase();
+          
+          // Get value from Assembly column (if mapped)
+          let assemblyVal = '';
+          if (mbomMapping.assembly !== null) {
+            assemblyVal = String(row[mbomMapping.assembly] || '').trim().toUpperCase();
+          }
 
-          if (cellValue === searchTerm || cellValue.includes(searchTerm)) {
+          // Check if Search Term matches Part Number OR Assembly Number
+          const matchPart = (partVal === searchTerm || (partVal && partVal.includes(searchTerm)));
+          const matchAssembly = (assemblyVal === searchTerm || (assemblyVal && assemblyVal.includes(searchTerm)));
+
+          if (matchPart || matchAssembly) {
             return {
               sheet: sheetName,
               row: r + 1,
@@ -818,7 +826,6 @@
       return null;
     }
 
-    // Model Functions
     function onModelSelected(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -848,6 +855,10 @@
           buildPartsTree();
           info.textContent = `Visual Loaded`;
           URL.revokeObjectURL(url);
+          
+          // UI Update: Visual Checkmark for Model
+          modelBtn.classList.add('success');
+          modelBtn.innerHTML = '<span>✓</span> Model Active';
         },
         undefined,
         (err) => {
@@ -926,47 +937,24 @@
         return;
       }
 
+      // Logic: Search MBOM using part number OR assembly number
       const mbomData = searchMBOM(partNum);
 
       if (mbomData) {
         let html = '<div class="mbom-data">';
-
-        if (mbomData.description) {
-          html += '<div class="mbom-label">Description:</div>';
-          html += `<div class="mbom-value">${escapeHtml(String(mbomData.description))}</div>`;
-        }
-
-        if (mbomData.po) {
-          html += '<div class="mbom-label">Purchase Order:</div>';
-          html += `<div class="mbom-value">${escapeHtml(String(mbomData.po))}</div>`;
-        }
-
-        if (mbomData.qty) {
-          html += '<div class="mbom-label">Quantity:</div>';
-          html += `<div class="mbom-value">${escapeHtml(String(mbomData.qty))}</div>`;
-        }
-
-        if (mbomData.revision) {
-          html += '<div class="mbom-label">Revision:</div>';
-          html += `<div class="mbom-value">${escapeHtml(String(mbomData.revision))}</div>`;
-        }
-
-        if (mbomData.assembly) {
-          html += '<div class="mbom-label">Assembly:</div>';
-          html += `<div class="mbom-value">${escapeHtml(String(mbomData.assembly))}</div>`;
-        }
-
-        html += '<div class="mbom-label">Source:</div>';
-        html += `<div class="mbom-value">Sheet: ${escapeHtml(mbomData.sheet)}, Row: ${mbomData.row}</div>`;
+        if (mbomData.description) html += `<div class="mbom-label">Description:</div><div class="mbom-value">${escapeHtml(String(mbomData.description))}</div>`;
+        if (mbomData.po) html += `<div class="mbom-label">Purchase Order:</div><div class="mbom-value">${escapeHtml(String(mbomData.po))}</div>`;
+        if (mbomData.qty) html += `<div class="mbom-label">Quantity:</div><div class="mbom-value">${escapeHtml(String(mbomData.qty))}</div>`;
+        if (mbomData.revision) html += `<div class="mbom-label">Revision:</div><div class="mbom-value">${escapeHtml(String(mbomData.revision))}</div>`;
+        if (mbomData.assembly) html += `<div class="mbom-label">Assembly:</div><div class="mbom-value">${escapeHtml(String(mbomData.assembly))}</div>`;
+        html += `<div class="mbom-label">Source:</div><div class="mbom-value">Sheet: ${escapeHtml(mbomData.sheet)}, Row: ${mbomData.row}</div>`;
         html += '</div>';
-
         partDetails.innerHTML = html;
       } else {
         partDetails.innerHTML = '<div class="not-found">Part not found in MBOM</div>';
       }
     }
 
-    // Tree Functions
     function buildPartsTree() {
       treeContent.innerHTML = '';
       objectToNodeMap.clear();
@@ -1089,7 +1077,6 @@
       });
     }
 
-    // Utility Functions
     function idxToCol(n) {
       let s = "";
       while (n >= 0) {
