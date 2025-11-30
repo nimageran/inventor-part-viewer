@@ -91,7 +91,7 @@
     }
 
     #fileInput,
-    #csvInput {
+    #bomInput {
       font-size: 11px;
       color: #dbeafe;
       padding: 4px 10px;
@@ -103,8 +103,8 @@
 
     #fileInput::-webkit-file-upload-button,
     #fileInput::file-selector-button,
-    #csvInput::-webkit-file-upload-button,
-    #csvInput::file-selector-button {
+    #bomInput::-webkit-file-upload-button,
+    #bomInput::file-selector-button {
       font-size: 11px;
       padding: 4px 10px;
       border-radius: 999px;
@@ -450,8 +450,8 @@
       <input type="file" id="fileInput" accept=".glb,.gltf" />
     </label>
     <label class="file-label">
-      CSV
-      <input type="file" id="csvInput" accept=".csv" />
+      BOM (CSV/XML)
+      <input type="file" id="bomInput" accept=".csv,.xml" />
     </label>
     <span id="info">Loading viewer...</span>
   </div>
@@ -486,7 +486,7 @@
   <script>
     const info = document.getElementById('info');
     const fileInput = document.getElementById('fileInput');
-    const csvInput = document.getElementById('csvInput');
+    const bomInput = document.getElementById('bomInput');
     const partValue = document.getElementById('part-value');
     const partDetails = document.getElementById('part-details');
     const treeContent = document.getElementById('tree-content');
@@ -533,7 +533,7 @@
     }
 
     function init() {
-      info.textContent = 'Viewer ready – load GLB (and BOM CSV).';
+      info.textContent = 'Viewer ready – load GLB (and BOM).';
 
       scene = new THREE.Scene();
       scene.background = null;
@@ -585,7 +585,7 @@
       window.addEventListener('resize', onWindowResize, false);
       renderer.domElement.addEventListener('click', onPointerClick, false);
       fileInput.addEventListener('change', onFileSelected, false);
-      csvInput.addEventListener('change', onCsvSelected, false);
+      bomInput.addEventListener('change', onBomSelected, false);
       expandAllBtn.addEventListener('click', expandAll);
       collapseAllBtn.addEventListener('click', collapseAll);
 
@@ -611,12 +611,13 @@
     function normalizeKey(str) {
       if (!str) return '';
       let s = String(str).trim();
-      // handle A-12345:1 -> A-12345
       if (s.includes(':')) {
         s = s.split(':')[0].trim();
       }
       return s.toUpperCase();
     }
+
+    // ---------- BOM PARSING (CSV + XML) ----------
 
     function parseBomCsv(text) {
       bomData = {};
@@ -656,25 +657,111 @@
       }
     }
 
-    function onCsvSelected(event) {
+    function parseBomXml(text) {
+      bomData = {};
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(text, "application/xml");
+
+      if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+        console.error("XML parse error");
+        return;
+      }
+
+      function getTagText(ctx, names) {
+        for (const n of names) {
+          const el = ctx.getElementsByTagName(n)[0];
+          if (el && el.textContent && el.textContent.trim()) {
+            return el.textContent.trim();
+          }
+        }
+        return null;
+      }
+
+      function getPropByName(ctx, names) {
+        const props = Array.from(ctx.getElementsByTagName('Property'));
+        for (const p of props) {
+          const nameAttr = (p.getAttribute('Name') || p.getAttribute('name') || '').toLowerCase();
+          if (names.some(n => nameAttr === n.toLowerCase())) {
+            const valNode = p.getElementsByTagName('Value')[0];
+            if (valNode && valNode.textContent && valNode.textContent.trim()) {
+              return valNode.textContent.trim();
+            }
+          }
+        }
+        return null;
+      }
+
+      let rows = Array.from(xmlDoc.getElementsByTagName('Row'));
+      if (rows.length === 0) {
+        rows = Array.from(xmlDoc.getElementsByTagName('BOMRow'));
+      }
+      if (rows.length === 0) {
+        rows = rows.concat(Array.from(xmlDoc.getElementsByTagName('Item')));
+        rows = rows.concat(Array.from(xmlDoc.getElementsByTagName('Part')));
+        rows = rows.concat(Array.from(xmlDoc.getElementsByTagName('Component')));
+      }
+
+      rows.forEach(row => {
+        let partNumber =
+          getTagText(row, ['PartNumber', 'Part_Number', 'PARTNUMBER', 'PartNo', 'Part']) ||
+          getPropByName(row, ['Part Number', 'PartNumber', 'PartNo', 'Part']);
+
+        if (!partNumber) return;
+
+        const title =
+          getTagText(row, ['Title', 'TITLE']) ||
+          getPropByName(row, ['Title']);
+
+        const description =
+          getTagText(row, ['Description', 'DESCRIP']) ||
+          getPropByName(row, ['Description', 'DESCRIP']);
+
+        const author =
+          getTagText(row, ['Author']) ||
+          getPropByName(row, ['Author']);
+
+        const key = normalizeKey(partNumber);
+        bomData[key] = {
+          partNumber,
+          title: title || '',
+          description: description || '',
+          author: author || ''
+        };
+      });
+    }
+
+    function onBomSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      info.textContent = 'Loading BOM CSV...';
+      info.textContent = 'Loading BOM...';
 
       const reader = new FileReader();
       reader.onload = (e) => {
-        parseBomCsv(e.target.result);
+        const text = e.target.result;
+        const name = file.name.toLowerCase();
+
+        if (name.endsWith('.csv')) {
+          parseBomCsv(text);
+        } else if (name.endsWith('.xml')) {
+          parseBomXml(text);
+        } else {
+          info.textContent = 'Unsupported BOM format (use CSV or XML).';
+          return;
+        }
+
         const count = Object.keys(bomData).length;
         info.textContent = 'BOM loaded (' + count + ' rows). ' +
           (modelRoot ? 'Click a part.' : 'Load GLB next.');
       };
       reader.onerror = (e) => {
         console.error(e);
-        info.textContent = 'Error reading CSV.';
+        info.textContent = 'Error reading BOM file.';
       };
       reader.readAsText(file);
     }
+
+    // ---------- METADATA + VIEWER LOGIC ----------
 
     function extractAllMetadata(obj) {
       const metadata = {
@@ -697,7 +784,7 @@
         custom: {}
       };
 
-      // Extract name from hierarchy as fallback
+      // Fallback name from hierarchy
       let current = obj;
       while (current) {
         if (
@@ -713,14 +800,14 @@
         current = current.parent;
       }
 
-      // Determine object type
+      // Type
       if (obj.isMesh) {
         metadata.type = 'Part';
       } else if (obj.children && obj.children.length > 0) {
         metadata.type = 'Assembly';
       }
 
-      // Extract userData
+      // userData from hierarchy
       current = obj;
       while (current) {
         if (current.userData && Object.keys(current.userData).length > 0) {
@@ -739,7 +826,7 @@
         current = current.parent;
       }
 
-      // Prefer a custom "name" property from userData if present
+      // Prefer userData.name if exists
       if (metadata.userData && Object.keys(metadata.userData).length > 0) {
         const nameKey = Object.keys(metadata.userData).find(
           key => key.toLowerCase() === 'name'
@@ -749,7 +836,7 @@
         }
       }
 
-      // 🔗 Merge BOM data (part number / title / description / author)
+      // Link to BOM
       const keyRaw = metadata.partNumber || metadata.name;
       const key = normalizeKey(keyRaw);
       let bomEntry = bomData[key];
@@ -770,7 +857,7 @@
         if (bomEntry.author)     metadata.author     = bomEntry.author;
       }
 
-      // Geometry info
+      // Geometry
       if (obj.isMesh && obj.geometry) {
         const geo = obj.geometry;
 
@@ -849,11 +936,11 @@
       let html = '';
 
       const basicInfo = [];
-      if (metadata.type)       basicInfo.push({ label: 'Type', value: metadata.type });
-      if (metadata.partNumber) basicInfo.push({ label: 'Part Number', value: metadata.partNumber });
-      if (metadata.title)      basicInfo.push({ label: 'Title', value: metadata.title });
-      if (metadata.description)basicInfo.push({ label: 'Description', value: metadata.description });
-      if (metadata.author)     basicInfo.push({ label: 'Author', value: metadata.author });
+      if (metadata.type)         basicInfo.push({ label: 'Type', value: metadata.type });
+      if (metadata.partNumber)   basicInfo.push({ label: 'Part Number', value: metadata.partNumber });
+      if (metadata.title)        basicInfo.push({ label: 'Title', value: metadata.title });
+      if (metadata.description)  basicInfo.push({ label: 'Description', value: metadata.description });
+      if (metadata.author)       basicInfo.push({ label: 'Author', value: metadata.author });
       if (metadata.manufacturer) basicInfo.push({ label: 'Manufacturer', value: metadata.manufacturer });
       if (metadata.partType)     basicInfo.push({ label: 'Part Type', value: metadata.partType });
 
